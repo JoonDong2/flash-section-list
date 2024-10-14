@@ -1,3 +1,3 @@
-import { FlashList } from '@shopify/flash-list';
+import FlashSectionList from './FlashSectionList';
 
-export const FlashSectionList = FlashList;
+export default FlashSectionList;
