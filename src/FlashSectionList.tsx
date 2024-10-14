@@ -8,13 +8,13 @@ import { useMemo } from 'react';
 import { lcm, omit } from './utils';
 import React from 'react';
 
-interface ElementSection {
+export interface ElementSection {
   element: React.ReactElement | null;
   sticky?: boolean;
   type?: string;
 }
 
-interface DataSection<ItemT> {
+export interface DataSection<ItemT> {
   data: ItemT[];
   renderItem: ListRenderItem<ItemT>;
   type?: string; // <- default: sectionIndex
@@ -23,6 +23,8 @@ interface DataSection<ItemT> {
   stickyHeaderIndices?: number[];
   numOfColumns?: number;
 }
+
+export type Section = ElementSection | DataSection<any>;
 
 const isElementSection = (section: any) => {
   return React.isValidElement((section as ElementSection).element);
@@ -55,7 +57,7 @@ const omitProps = [
 
 function FlashSectionList(
   propsOrigin: Omit<FlashListProps<any>, (typeof omitProps)[number]> & {
-    sections: (DataSection<any> | ElementSection)[];
+    sections: Section[];
   },
   ref: any
 ) {
