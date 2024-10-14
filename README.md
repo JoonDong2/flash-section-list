@@ -1,8 +1,8 @@
 # flash-section-list
 
-The library, which is dependent on `@shopify/flash-list`, overrides the [`overrideItemLayout` function internally](./src/FlashSectionList.tsx#L197-L220) to ensure that sections with different `numOfColumns` are rendered properly.
+The library, which is dependent on `@shopify/flash-list`, overrides the [`overrideItemLayout` function internally](./src/FlashSectionList.tsx#L234-L258) to ensure that sections with different `numOfColumns` are rendered properly.
 
-Additionally, for enhanced performance, the library also [overrides the `getItemType` function internally](./src/FlashSectionList.tsx#L175-L196) based on the type information of the section and the header or footer.
+Additionally, for enhanced performance, the library also [overrides the `getItemType` function internally](./src/FlashSectionList.tsx#L212-L233) based on the type information of the section and the header or footer.
 
 You can [set `sticky` properties](./example/src/App.tsx#L31) not only for section items but also for footers or headers.
 
@@ -101,7 +101,7 @@ const sections =[{
 
 ### Sections
 
-This library [parses the `sections` array whenever it changes.](./src/FlashSectionList.tsx#L50-L97)  
+This library [parses the `sections` array whenever it changes.](./src/FlashSectionList.tsx#L65-L142)  
 Therefore, you should avoid changing the sections array.
 
 ## License
