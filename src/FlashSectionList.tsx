@@ -8,21 +8,36 @@ import { useMemo } from 'react';
 import { lcm, omit } from './utils';
 import React from 'react';
 
-interface HeaderOrFooter {
+interface ElementSection {
   element: React.ReactElement | null;
   sticky?: boolean;
   type?: string;
 }
 
-interface Section<ItemT> {
+interface DataSection<ItemT> {
   data: ItemT[];
   renderItem: ListRenderItem<ItemT>;
   type?: string; // <- default: sectionIndex
-  header?: HeaderOrFooter;
-  footer?: HeaderOrFooter;
+  header?: ElementSection;
+  footer?: ElementSection;
   stickyHeaderIndices?: number[];
   numOfColumns?: number;
 }
+
+const isElementSection = (section: any) => {
+  return React.isValidElement((section as ElementSection).element);
+};
+
+const convertDataSectionFrom = (section: ElementSection): DataSection<any> => {
+  return {
+    data: [0],
+    renderItem: () => {
+      return section.element;
+    },
+    stickyHeaderIndices: section.sticky ? [0] : undefined,
+    type: section.type,
+  };
+};
 
 const omitProps = [
   'data',
@@ -40,30 +55,48 @@ const omitProps = [
 
 function FlashSectionList(
   propsOrigin: Omit<FlashListProps<any>, (typeof omitProps)[number]> & {
-    sections: Section<any>[];
+    sections: (DataSection<any> | ElementSection)[];
   },
   ref: any
 ) {
   let { sections, ...props } = propsOrigin;
   props = omit(propsOrigin, omitProps, false);
 
-  const { sectionStartIndices, data, stickyHeaderIndices, numOfColumns } =
-    useMemo(() => {
-      const numOfColumnArray: number[] = [];
-      const stickyHeaderIndices: number[] = [];
-      let index = 0;
-      const sectionStartIndices: number[] = [];
-      const data = sections.reduce<Array<any>>((acc, cur: Section<any>) => {
+  const {
+    dataSections,
+    sectionStartIndices,
+    data,
+    stickyHeaderIndices,
+    numOfColumns,
+  } = useMemo(() => {
+    const dataSections: DataSection<any>[] = [];
+
+    const numOfColumnArray: number[] = [];
+
+    const stickyHeaderIndices: number[] = [];
+    let index = 0;
+
+    const sectionStartIndices: number[] = [];
+
+    const data = sections.reduce<Array<any>>(
+      (acc, cur: DataSection<any> | ElementSection) => {
+        const section: DataSection<any> = isElementSection(cur)
+          ? convertDataSectionFrom(cur as ElementSection)
+          : (cur as DataSection<any>);
+
+        dataSections.push(section);
+
         const {
           data,
           header,
           footer,
           stickyHeaderIndices: stickyHeaderIndicesOfSection,
-        } = cur;
+          numOfColumns,
+        } = section;
         let length = data.length;
 
         sectionStartIndices.push(index);
-        numOfColumnArray.push(cur.numOfColumns ?? 1);
+        numOfColumnArray.push(numOfColumns ?? 1);
 
         if (header) {
           if (header.sticky) {
@@ -94,15 +127,18 @@ function FlashSectionList(
         index += length;
 
         return acc;
-      }, []);
+      },
+      []
+    );
 
-      return {
-        sectionStartIndices,
-        data,
-        stickyHeaderIndices,
-        numOfColumns: lcm(numOfColumnArray),
-      };
-    }, [sections]);
+    return {
+      dataSections,
+      sectionStartIndices,
+      data,
+      stickyHeaderIndices,
+      numOfColumns: lcm(numOfColumnArray),
+    };
+  }, [sections]);
 
   // binary search
   const getSectionIndexOf = (index: number) => {
@@ -146,7 +182,7 @@ function FlashSectionList(
       numColumns={numOfColumns}
       renderItem={({ index, ...etc }: ListRenderItemInfo<any>) => {
         const sectionIndex = getSectionIndexOf(index);
-        const section = sections[sectionIndex];
+        const section = dataSections[sectionIndex];
         const sectionStartIndex = sectionStartIndices[sectionIndex];
         if (!section || sectionStartIndex === undefined) {
           return null;
@@ -174,7 +210,7 @@ function FlashSectionList(
       }}
       getItemType={(_, index) => {
         const sectionIndex = getSectionIndexOf(index);
-        const section = sections[sectionIndex];
+        const section = dataSections[sectionIndex];
         const sectionStartIndex = sectionStartIndices[sectionIndex];
         if (!section || sectionStartIndex === undefined) {
           return -1;
@@ -196,7 +232,7 @@ function FlashSectionList(
       }}
       overrideItemLayout={(layout, _, index) => {
         const sectionIndex = getSectionIndexOf(index);
-        const section = sections[sectionIndex];
+        const section = dataSections[sectionIndex];
         const sectionStartIndex = sectionStartIndices[sectionIndex];
         if (!section || sectionStartIndex === undefined) {
           return;
