@@ -7,18 +7,18 @@ Additionally, for enhanced performance, the library also [overrides the `getItem
 You can [set `sticky` properties](./example/src/App.tsx#L31) not only for section items but also for footers or headers.
 
 ```ts
-interface HeaderOrFooter {
+interface ElementSection {
   element: React.ReactElement | null;
   sticky?: boolean;
   type?: string;
 }
 
-interface Section<ItemT> {
+interface DataSection<ItemT> {
   data: ItemT[];
   renderItem: ListRenderItem<ItemT>;
   type?: string; // <- default: sectionIndex
-  header?: HeaderOrFooter;
-  footer?: HeaderOrFooter;
+  header?: ElementSection;
+  footer?: ElementSection;
   stickyHeaderIndices?: number[];
   numOfColumns?: number;
 }
@@ -42,7 +42,7 @@ import { Dimensions, View } from 'react-native';
 
 const screenWidth = Dimensions.get('screen').width;
 
-const sections = [
+const sections: (DataSection<any> | ElementSection)[] = [
   {
     data: Array.from({ length: 100 }),
     numOfColumns: 1, // !
@@ -58,6 +58,10 @@ const sections = [
       sticky: true,
     },
   },
+  {
+    element: <View />,
+    sticky: true,
+  }
   {
     data: Array.from({ length: 100 }),
     numOfColumns: 2, // !!
