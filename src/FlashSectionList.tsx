@@ -6,6 +6,7 @@ import {
 } from '@shopify/flash-list';
 import { useMemo } from 'react';
 import { lcm, omit } from './utils';
+import React from 'react';
 
 interface HeaderOrFooter {
   element: React.ReactElement | null;
@@ -40,7 +41,8 @@ const omitProps = [
 function FlashSectionList(
   propsOrigin: Omit<FlashListProps<any>, (typeof omitProps)[number]> & {
     sections: Section<any>[];
-  }
+  },
+  ref: any
 ) {
   let { sections, ...props } = propsOrigin;
   props = omit(propsOrigin, omitProps, false);
@@ -138,6 +140,7 @@ function FlashSectionList(
   return (
     <FlashList
       {...props}
+      ref={ref}
       data={data}
       stickyHeaderIndices={stickyHeaderIndices}
       numColumns={numOfColumns}
@@ -220,4 +223,4 @@ function FlashSectionList(
   );
 }
 
-export default FlashSectionList;
+export default React.forwardRef(FlashSectionList);
