@@ -111,7 +111,8 @@ function FlashSectionList(
         if (stickyHeaderIndicesOfSection) {
           stickyHeaderIndices.push(
             ...stickyHeaderIndicesOfSection.map(
-              (indexWithinSection) => indexWithinSection + index
+              (indexWithinSection) =>
+                indexWithinSection + index + (header ? 1 : 0)
             )
           );
         }
