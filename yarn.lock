@@ -7173,6 +7173,15 @@ __metadata:
   languageName: node
   linkType: hard
 
+"expo-image@npm:~1.13.0":
+  version: 1.13.0
+  resolution: "expo-image@npm:1.13.0"
+  peerDependencies:
+    expo: "*"
+  checksum: 041e83a42adda147ae594de072aa35b8be452c4bbb096946d7dda4c1a285aec4c39fcf19f9435691b573d94602fe85e69ae349dd9c448a3b38d63037003569c8
+  languageName: node
+  linkType: hard
+
 "expo-keep-awake@npm:~13.0.2":
   version: 13.0.2
   resolution: "expo-keep-awake@npm:13.0.2"
@@ -7508,6 +7517,7 @@ __metadata:
     "@expo/metro-runtime": ~3.2.3
     "@shopify/flash-list": 1.6.4
     expo: ~51.0.28
+    expo-image: ~1.13.0
     expo-status-bar: ~1.12.1
     react: 18.2.0
     react-dom: 18.2.0
