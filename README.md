@@ -26,6 +26,12 @@ interface DataSection<ItemT> {
 
 ## Example
 
+### Simple
+
+[./example/src/App.tsx](./example/src/App.tsx)
+
+### Complex (with NestedScrollView and TabView)
+
 https://github.com/JoonDong2/flash-section-list-example
 
 ## Installation
@@ -78,8 +84,15 @@ const sections: (DataSection<any> | ElementSection)[] = [
 export default function App() {
   return <FlashSectionList estimatedItemSize={110} sections={sections} />;
 }
-
 ```
+
+### Type
+
+The `type` of a Section refers to the type that will be applied to all items, excluding the `header` and `footer`.
+
+By default, the `index` of the Section is used. However, if items in different Sections share the same type, you may use the same type for them. (e.g., [Example](./example/src/App.tsx#L49))
+
+It's recommended to use the same type for items with the same structure to encourage optimal reuse.
 
 ## Known Issues
 
@@ -103,6 +116,22 @@ const sections =[{
 
 This library [parses the `sections` array whenever it changes.](./src/FlashSectionList.tsx#L65-L142)  
 Therefore, you should avoid changing the sections array.
+
+### Blank
+
+When `numOfColumns` is set to 3 and there are 5 items, an empty space will occur in the second row.
+
+If this empty space is not physically filled, the next row will move up, causing an alignment issue.
+
+To resolve this, I used a method that [duplicates the last item of each section](./src/FlashSectionList.tsx#L219-L232) whenever empty spaces occur.
+
+However, I am unsure of what issues this approach might cause.
+
+### Screen Jitter
+
+There is an issue in the iPhone simulator where the screen shakes when scrolling to the edges.
+
+This issue was not observed on the Android emulator, or on actual iPhone and Android devices.
 
 ## License
 
