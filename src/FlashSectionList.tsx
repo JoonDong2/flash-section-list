@@ -24,8 +24,8 @@ export interface DataSection<ItemT> {
   numOfColumns?: number;
 }
 
-export type WithRemains<T> = T & {
-  remains?: number;
+export type WithDummyCount<T> = T & {
+  dummyCount?: number;
 };
 
 export type Section = ElementSection | DataSection<any>;
@@ -45,7 +45,9 @@ const convertDataSectionFrom = (section: ElementSection): DataSection<any> => {
   };
 };
 
-const DUMMY = {};
+const DUMMY = {
+  type: '~d!u@m#m$y%^&*()',
+} as const;
 
 const omitProps = [
   'data',
@@ -77,7 +79,7 @@ function FlashSectionList(
     stickyHeaderIndices,
     numOfColumns,
   } = useMemo(() => {
-    const dataSections: WithRemains<DataSection<any>>[] = [];
+    const dataSections: WithDummyCount<DataSection<any>>[] = [];
 
     const numOfColumnArray: number[] = [];
 
@@ -88,7 +90,7 @@ function FlashSectionList(
 
     const data = sections.reduce<Array<any>>(
       (acc, cur: DataSection<any> | ElementSection) => {
-        const section: WithRemains<DataSection<any>> = isElementSection(cur)
+        const section: WithDummyCount<DataSection<any>> = isElementSection(cur)
           ? convertDataSectionFrom(cur as ElementSection)
           : (cur as DataSection<any>);
 
@@ -125,15 +127,15 @@ function FlashSectionList(
           );
         }
 
-        const remains =
+        const dummyCount =
           data.length % numOfColumns !== 0
             ? numOfColumns - (data.length % numOfColumns)
             : 0;
 
-        section.remains = remains;
+        length += dummyCount;
+        section.dummyCount = dummyCount;
 
-        for (let i = 0; i < remains; i++) {
-          length += 1;
+        for (let i = 0; i < dummyCount; i++) {
           acc.push(DUMMY);
         }
 
@@ -205,6 +207,7 @@ function FlashSectionList(
         if (item === DUMMY) {
           return null;
         }
+
         const sectionIndex = getSectionIndexOf(index);
         const section = dataSections[sectionIndex];
         const sectionStartIndex = sectionStartIndices[sectionIndex];
@@ -212,31 +215,36 @@ function FlashSectionList(
           return null;
         }
 
-        let offset = 0;
+        const headerOffset = section.header ? 1 : 0;
 
-        if (section.header && index === sectionStartIndex) {
-          offset = 1;
-          return section.header.element;
-        }
-
-        if (
+        const isHeader = section.header && index === sectionStartIndex;
+        const isFooter =
           section.footer &&
           index ===
             sectionStartIndex +
               section.data.length +
-              (section.header ? 1 : 0) +
-              (section.remains ?? 0)
-        ) {
-          return section.footer.element;
+              headerOffset +
+              (section.dummyCount ?? 0);
+
+        if (isHeader) {
+          return section.header?.element ?? null;
+        }
+
+        if (isFooter) {
+          return section.footer?.element ?? null;
         }
 
         return section.renderItem({
-          index: index - sectionStartIndex - offset,
+          index: index - sectionStartIndex - headerOffset,
           item,
           ...etc,
         });
       }}
-      getItemType={(_, index) => {
+      getItemType={(item, index) => {
+        if (item === DUMMY) {
+          return DUMMY.type;
+        }
+
         const sectionIndex = getSectionIndexOf(index);
         const section = dataSections[sectionIndex];
         const sectionStartIndex = sectionStartIndices[sectionIndex];
@@ -244,19 +252,22 @@ function FlashSectionList(
           return -1;
         }
 
-        if (section.header && index === sectionStartIndex) {
-          return section.header.type ?? `header-${sectionIndex}`;
-        }
-
-        if (
+        const headerOffset = section.header ? 1 : 0;
+        const isHeader = section.header && index === sectionStartIndex;
+        const isFooter =
           section.footer &&
           index ===
             sectionStartIndex +
               section.data.length +
-              (section.header ? 1 : 0) +
-              (section.remains ?? 0)
-        ) {
-          return section.footer.type ?? `footer-${sectionIndex}`;
+              headerOffset +
+              (section.dummyCount ?? 0);
+
+        if (isHeader) {
+          return section.header?.type ?? `header-${sectionIndex}`;
+        }
+
+        if (isFooter) {
+          return section.footer?.type ?? `footer-${sectionIndex}`;
         }
 
         return section.type ?? sectionIndex;
@@ -269,15 +280,17 @@ function FlashSectionList(
           return;
         }
 
-        if (
-          (section.header && index === sectionStartIndex) ||
-          (section.footer &&
-            index ===
-              sectionStartIndex +
-                section.data.length +
-                (section.header ? 1 : 0) +
-                (section.remains ?? 0))
-        ) {
+        const headerOffset = section.header ? 1 : 0;
+        const isHeader = section.header && index === sectionStartIndex;
+        const isFooter =
+          section.footer &&
+          index ===
+            sectionStartIndex +
+              section.data.length +
+              headerOffset +
+              (section.dummyCount ?? 0);
+
+        if (isHeader || isFooter) {
           layout.span = numOfColumns;
         } else {
           layout.span = section.numOfColumns
