@@ -1,123 +1,144 @@
-import FlashSectionList from 'flash-section-list';
-import { Dimensions, View } from 'react-native';
+import FlashSectionList, { type Section } from 'flash-section-list';
+import { Dimensions, Text, View } from 'react-native';
 
 const screenWidth = Dimensions.get('screen').width;
 
-const sections = [
+function getRandomColor() {
+  // 16진수 색상 코드를 생성합니다.
+  const randomColor =
+    '#' +
+    Math.floor(Math.random() * 0xffffff)
+      .toString(16)
+      .padStart(6, '0');
+  return randomColor;
+}
+
+const sections: Section[] = [
   {
-    data: Array.from({ length: 100 }),
-    renderItem: () => {
+    data: Array.from({ length: 50 }).map(getRandomColor),
+    renderItem: ({ item: color, index }) => {
+      const width = screenWidth / 3;
+      const height = width * 1.5;
       return (
         <View
           style={{
-            height: 100,
-            width: screenWidth,
-            backgroundColor: 'yellow',
-            marginBottom: 10,
+            width,
+            height,
+            backgroundColor: color,
+            justifyContent: 'center',
+            alignItems: 'center',
           }}
-        />
+        >
+          <Text style={{ color: 'black' }}>{index}</Text>
+        </View>
       );
     },
-    header: {
-      element: (
-        <View
-          style={{
-            width: screenWidth,
-            height: 100,
-            backgroundColor: 'skyblue',
-          }}
-        />
-      ),
-      sticky: true,
-    },
-    footer: {
-      element: (
-        <View
-          style={{
-            width: screenWidth,
-            height: 100,
-            backgroundColor: 'tomato',
-          }}
-        />
-      ),
-      sticky: true,
-    },
-  },
-  {
-    data: Array.from({ length: 100 }),
-    numOfColumns: 2,
-    header: {
-      element: (
-        <View
-          style={{
-            width: screenWidth,
-            height: 100,
-            backgroundColor: 'orange',
-          }}
-        />
-      ),
-      sticky: true,
-    },
-    renderItem: ({ index }: { index: number }) => {
-      return (
-        <View
-          style={{
-            height: 100,
-            width: screenWidth / 2,
-            backgroundColor: index % 2 === 0 ? 'blue' : 'green',
-            marginBottom: 10,
-          }}
-        />
-      );
-    },
-  },
-  {
-    data: Array.from({ length: 90 }),
     numOfColumns: 3,
-    renderItem: ({ index }: { index: number }) => {
+    type: 'block',
+  },
+  {
+    header: {
+      element: <View style={{ height: 10 }} />,
+    },
+    data: Array.from({ length: 31 }).map(getRandomColor),
+    renderItem: ({ item: color, index }) => {
+      const width = screenWidth / 2;
+      const height = width * 1.5;
       return (
         <View
           style={{
-            height: 100,
-            width: screenWidth / 3,
-            backgroundColor:
-              index % 3 === 0
-                ? 'yellow'
-                : index % 3 === 1
-                  ? 'skyblue'
-                  : 'tomato',
-            marginBottom: 10,
+            width,
+            height,
+            backgroundColor: color,
+            justifyContent: 'center',
+            alignItems: 'center',
           }}
-        />
+        >
+          <Text>{index}</Text>
+        </View>
       );
     },
-    header: {
-      element: (
+    numOfColumns: 2,
+    type: 'block',
+  },
+  {
+    element: (
+      <View
+        style={{
+          width: screenWidth,
+          height: 300,
+          marginVertical: 10,
+          backgroundColor: getRandomColor(),
+        }}
+      />
+    ),
+    type: 'element',
+  },
+  {
+    element: (
+      <View
+        style={{
+          width: screenWidth,
+          height: 300,
+          marginVertical: 10,
+          backgroundColor: getRandomColor(),
+        }}
+      />
+    ),
+    type: 'element',
+  },
+  {
+    data: Array.from({ length: 101 }).map(getRandomColor),
+    renderItem: ({ item: color, index }) => {
+      const width = screenWidth / 4;
+      const height = width * 1.5;
+      return (
         <View
           style={{
-            width: screenWidth,
-            height: 100,
-            backgroundColor: 'skyblue',
+            width,
+            height,
+            backgroundColor: color,
+            justifyContent: 'center',
+            alignItems: 'center',
           }}
-        />
-      ),
-      sticky: true,
+        >
+          <Text>{index}</Text>
+        </View>
+      );
     },
-    footer: {
-      element: (
+    numOfColumns: 4,
+    type: 'block',
+  },
+  {
+    data: Array.from({ length: 30 }).map(getRandomColor),
+    renderItem: ({ item: color, index }) => {
+      const width = screenWidth;
+      const height = 100;
+      return (
         <View
           style={{
-            width: screenWidth,
-            height: 100,
-            backgroundColor: 'tomato',
+            width,
+            height,
+            backgroundColor: color,
+            justifyContent: 'center',
+            alignItems: 'center',
           }}
-        />
-      ),
-      sticky: true,
+        >
+          <Text>{index}</Text>
+        </View>
+      );
     },
+    numOfColumns: 1,
+    type: 'block',
   },
 ];
 
 export default function App() {
-  return <FlashSectionList estimatedItemSize={110} sections={sections} />;
+  return (
+    <FlashSectionList
+      contentContainerStyle={{ backgroundColor: 'white' }}
+      estimatedItemSize={110}
+      sections={sections}
+    />
+  );
 }
