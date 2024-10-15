@@ -7,6 +7,9 @@ import {
 import { useMemo } from 'react';
 import { lcm, omit } from './utils';
 import React from 'react';
+import { View } from 'react-native';
+
+const opacity0 = { opacity: 0 } as const;
 
 export interface ElementSection {
   element: React.ReactElement | null;
@@ -204,10 +207,6 @@ function FlashSectionList(
       stickyHeaderIndices={stickyHeaderIndices}
       numColumns={numOfColumns}
       renderItem={({ index, item, ...etc }: ListRenderItemInfo<any>) => {
-        if (item === DUMMY) {
-          return null;
-        }
-
         const sectionIndex = getSectionIndexOf(index);
         const section = dataSections[sectionIndex];
         const sectionStartIndex = sectionStartIndices[sectionIndex];
@@ -216,6 +215,21 @@ function FlashSectionList(
         }
 
         const headerOffset = section.header ? 1 : 0;
+
+        const dataLastIndex = section.data.length - 1;
+        const lastItem = section.data[dataLastIndex];
+
+        if (item === DUMMY && lastItem) {
+          return (
+            <View pointerEvents="none" style={opacity0}>
+              {section.renderItem({
+                index: dataLastIndex,
+                item: lastItem,
+                ...etc,
+              })}
+            </View>
+          );
+        }
 
         const isHeader = section.header && index === sectionStartIndex;
         const isFooter =
@@ -234,22 +248,24 @@ function FlashSectionList(
           return section.footer?.element ?? null;
         }
 
+        const localIndex = index - sectionStartIndex - headerOffset;
+
         return section.renderItem({
-          index: index - sectionStartIndex - headerOffset,
+          index: localIndex,
           item,
           ...etc,
         });
       }}
       getItemType={(item, index) => {
-        if (item === DUMMY) {
-          return DUMMY.type;
-        }
-
         const sectionIndex = getSectionIndexOf(index);
         const section = dataSections[sectionIndex];
         const sectionStartIndex = sectionStartIndices[sectionIndex];
         if (!section || sectionStartIndex === undefined) {
           return -1;
+        }
+
+        if (item === DUMMY) {
+          return DUMMY.type + sectionIndex;
         }
 
         const headerOffset = section.header ? 1 : 0;
