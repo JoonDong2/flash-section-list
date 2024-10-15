@@ -24,6 +24,10 @@ export interface DataSection<ItemT> {
   numOfColumns?: number;
 }
 
+export type WithRemains<T> = T & {
+  remains?: number;
+};
+
 export type Section = ElementSection | DataSection<any>;
 
 const isElementSection = (section: any) => {
@@ -73,7 +77,7 @@ function FlashSectionList(
     stickyHeaderIndices,
     numOfColumns,
   } = useMemo(() => {
-    const dataSections: DataSection<any>[] = [];
+    const dataSections: WithRemains<DataSection<any>>[] = [];
 
     const numOfColumnArray: number[] = [];
 
@@ -84,7 +88,7 @@ function FlashSectionList(
 
     const data = sections.reduce<Array<any>>(
       (acc, cur: DataSection<any> | ElementSection) => {
-        const section: DataSection<any> = isElementSection(cur)
+        const section: WithRemains<DataSection<any>> = isElementSection(cur)
           ? convertDataSectionFrom(cur as ElementSection)
           : (cur as DataSection<any>);
 
@@ -121,7 +125,13 @@ function FlashSectionList(
           );
         }
 
-        const remains = numOfColumns - (data.length % numOfColumns);
+        const remains =
+          data.length % numOfColumns !== 0
+            ? numOfColumns - (data.length % numOfColumns)
+            : 0;
+
+        section.remains = remains;
+
         for (let i = 0; i < remains; i++) {
           length += 1;
           acc.push(DUMMY);
@@ -212,7 +222,10 @@ function FlashSectionList(
         if (
           section.footer &&
           index ===
-            sectionStartIndex + section.data.length + (section.header ? 1 : 0)
+            sectionStartIndex +
+              section.data.length +
+              (section.header ? 1 : 0) +
+              (section.remains ?? 0)
         ) {
           return section.footer.element;
         }
@@ -238,7 +251,10 @@ function FlashSectionList(
         if (
           section.footer &&
           index ===
-            sectionStartIndex + section.data.length + (section.header ? 1 : 0)
+            sectionStartIndex +
+              section.data.length +
+              (section.header ? 1 : 0) +
+              (section.remains ?? 0)
         ) {
           return section.footer.type ?? `footer-${sectionIndex}`;
         }
@@ -259,7 +275,8 @@ function FlashSectionList(
             index ===
               sectionStartIndex +
                 section.data.length +
-                (section.header ? 1 : 0))
+                (section.header ? 1 : 0) +
+                (section.remains ?? 0))
         ) {
           layout.span = numOfColumns;
         } else {
