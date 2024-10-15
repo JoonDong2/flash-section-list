@@ -41,6 +41,8 @@ const convertDataSectionFrom = (section: ElementSection): DataSection<any> => {
   };
 };
 
+const DUMMY = {};
+
 const omitProps = [
   'data',
   'renderItem',
@@ -93,12 +95,12 @@ function FlashSectionList(
           header,
           footer,
           stickyHeaderIndices: stickyHeaderIndicesOfSection,
-          numOfColumns,
+          numOfColumns = 1,
         } = section;
         let length = data.length;
 
         sectionStartIndices.push(index);
-        numOfColumnArray.push(numOfColumns ?? 1);
+        numOfColumnArray.push(numOfColumns);
 
         if (header) {
           if (header.sticky) {
@@ -117,6 +119,12 @@ function FlashSectionList(
                 indexWithinSection + index + (header ? 1 : 0)
             )
           );
+        }
+
+        const remains = numOfColumns - (data.length % numOfColumns);
+        for (let i = 0; i < remains; i++) {
+          length += 1;
+          acc.push(DUMMY);
         }
 
         if (footer) {
@@ -183,7 +191,10 @@ function FlashSectionList(
       data={data}
       stickyHeaderIndices={stickyHeaderIndices}
       numColumns={numOfColumns}
-      renderItem={({ index, ...etc }: ListRenderItemInfo<any>) => {
+      renderItem={({ index, item, ...etc }: ListRenderItemInfo<any>) => {
+        if (item === DUMMY) {
+          return null;
+        }
         const sectionIndex = getSectionIndexOf(index);
         const section = dataSections[sectionIndex];
         const sectionStartIndex = sectionStartIndices[sectionIndex];
@@ -208,6 +219,7 @@ function FlashSectionList(
 
         return section.renderItem({
           index: index - sectionStartIndex - offset,
+          item,
           ...etc,
         });
       }}
@@ -251,11 +263,9 @@ function FlashSectionList(
         ) {
           layout.span = numOfColumns;
         } else {
-          const span = section.numOfColumns
+          layout.span = section.numOfColumns
             ? numOfColumns / section.numOfColumns
             : numOfColumns;
-
-          layout.span = span;
         }
       }}
     />
