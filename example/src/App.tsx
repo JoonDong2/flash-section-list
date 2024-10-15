@@ -1,74 +1,61 @@
+import { Image } from 'expo-image';
 import FlashSectionList, { type Section } from 'flash-section-list';
-import { Dimensions, Text, View } from 'react-native';
+import { Dimensions, View } from 'react-native';
 
 const screenWidth = Dimensions.get('screen').width;
 
-function getRandomColor() {
-  // 16진수 색상 코드를 생성합니다.
-  const randomColor =
-    '#' +
-    Math.floor(Math.random() * 0xffffff)
-      .toString(16)
-      .padStart(6, '0');
-  return randomColor;
-}
+const getImage = (id: number) => {
+  return `https://picsum.photos/id/${id}/100/150`;
+};
 
 const sections: Section[] = [
   {
-    data: Array.from({ length: 50 }).map(getRandomColor),
-    renderItem: ({ item: color, index }) => {
-      const width = screenWidth / 3;
+    data: Array.from({ length: 500 }).map((_, index) => getImage(index)),
+    renderItem: ({ item: uri }) => {
+      const width = screenWidth / 8;
       const height = width * 1.5;
       return (
-        <View
+        <Image
+          source={{ uri }}
           style={{
             width,
             height,
-            backgroundColor: color,
-            justifyContent: 'center',
-            alignItems: 'center',
           }}
-        >
-          <Text style={{ color: 'black' }}>{index}</Text>
-        </View>
+        />
       );
     },
-    numOfColumns: 3,
-    type: 'block',
+    numOfColumns: 8,
+    type: 'image',
   },
   {
     header: {
       element: <View style={{ height: 10 }} />,
     },
-    data: Array.from({ length: 31 }).map(getRandomColor),
-    renderItem: ({ item: color, index }) => {
-      const width = screenWidth / 2;
+    data: Array.from({ length: 300 }).map((_, index) => getImage(index)),
+    renderItem: ({ item: uri }) => {
+      const width = screenWidth / 6;
       const height = width * 1.5;
       return (
-        <View
+        <Image
+          source={{ uri }}
           style={{
             width,
             height,
-            backgroundColor: color,
-            justifyContent: 'center',
-            alignItems: 'center',
           }}
-        >
-          <Text>{index}</Text>
-        </View>
+        />
       );
     },
-    numOfColumns: 2,
-    type: 'block',
+    numOfColumns: 6,
+    type: 'image', // recyclable as long as the structure remains the same, even if the size differs.
   },
   {
     element: (
-      <View
+      <Image
+        source={{ uri: getImage(100) }}
         style={{
           width: screenWidth,
-          height: 300,
+          height: screenWidth * 1.5,
           marginVertical: 10,
-          backgroundColor: getRandomColor(),
         }}
       />
     ),
@@ -76,60 +63,52 @@ const sections: Section[] = [
   },
   {
     element: (
-      <View
+      <Image
+        source={{ uri: getImage(101) }}
         style={{
           width: screenWidth,
-          height: 300,
+          height: screenWidth * 1.5,
           marginVertical: 10,
-          backgroundColor: getRandomColor(),
         }}
       />
     ),
     type: 'element',
   },
   {
-    data: Array.from({ length: 101 }).map(getRandomColor),
-    renderItem: ({ item: color, index }) => {
-      const width = screenWidth / 4;
+    data: Array.from({ length: 300 }).map((_, index) => getImage(index)),
+    renderItem: ({ item: uri }) => {
+      const width = screenWidth / 12;
       const height = width * 1.5;
       return (
-        <View
+        <Image
+          source={{ uri }}
           style={{
             width,
             height,
-            backgroundColor: color,
-            justifyContent: 'center',
-            alignItems: 'center',
           }}
-        >
-          <Text>{index}</Text>
-        </View>
+        />
       );
     },
-    numOfColumns: 4,
-    type: 'block',
+    numOfColumns: 12,
+    type: 'image',
   },
   {
-    data: Array.from({ length: 30 }).map(getRandomColor),
-    renderItem: ({ item: color, index }) => {
-      const width = screenWidth;
-      const height = 100;
+    data: Array.from({ length: 755 }).map((_, index) => getImage(index)),
+    renderItem: ({ item: uri }) => {
+      const width = screenWidth / 10;
+      const height = width * 1.5;
       return (
-        <View
+        <Image
+          source={{ uri }}
           style={{
             width,
             height,
-            backgroundColor: color,
-            justifyContent: 'center',
-            alignItems: 'center',
           }}
-        >
-          <Text>{index}</Text>
-        </View>
+        />
       );
     },
-    numOfColumns: 1,
-    type: 'block',
+    numOfColumns: 10,
+    type: 'image',
   },
 ];
 
@@ -141,4 +120,22 @@ export default function App() {
       sections={sections}
     />
   );
+  // vs FlatList
+  // return (
+  //   <FlatList
+  //     data={sections}
+  //     renderItem={({ item }) => {
+  //       if (item.data) {
+  //         return (
+  //           <FlatList
+  //             data={item.data}
+  //             renderItem={item.renderItem}
+  //             numColumns={item.numOfColumns ?? 1}
+  //           />
+  //         );
+  //       }
+  //       return null;
+  //     }}
+  //   />
+  // );
 }
