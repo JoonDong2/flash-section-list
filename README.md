@@ -129,8 +129,6 @@ To fully take advantage of reusability, I didn't limit the wrapping to just the 
 
 As a result, the layout of all items within a section must be consistent.
 
-However, I am unsure of what issues this approach might cause.
-
 ### Screen Jitter
 
 There is an issue in the iPhone simulator where the screen shakes when scrolling to the edges.
