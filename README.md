@@ -1,8 +1,8 @@
 # flash-section-list
 
-The library, which is dependent on `@shopify/flash-list`, overrides the [`overrideItemLayout` function internally](./src/FlashSectionList.tsx#L234-L258) to ensure that sections with different `numOfColumns` are rendered properly.
+The library, which is dependent on `@shopify/flash-list`, overrides the [`overrideItemLayout` function internally](./src/FlashSectionList.tsx#295-L320) to ensure that sections with different `numOfColumns` are rendered properly.
 
-Additionally, for enhanced performance, the library also [overrides the `getItemType` function internally](./src/FlashSectionList.tsx#L212-L233) based on the type information of the section and the header or footer.
+Additionally, for enhanced performance, the library also [overrides the `getItemType` function internally](./src/FlashSectionList.tsx#L263-L294) based on the type information of the section and the header or footer.
 
 You can [set `sticky` properties](./example/src/App.tsx#L31) not only for section items but also for footers or headers.
 
@@ -114,7 +114,7 @@ const sections =[{
 
 ### Sections
 
-This library [parses the `sections` array whenever it changes.](./src/FlashSectionList.tsx#L65-L142)  
+This library [parses the `sections` array whenever it changes.](./src/FlashSectionList.tsx#L75-L155)  
 Therefore, you should avoid changing the sections array.
 
 ### Blank
@@ -123,7 +123,11 @@ When `numOfColumns` is set to 3 and there are 5 items, an empty space will occur
 
 If this empty space is not physically filled, the next row will move up, causing an alignment issue.
 
-To resolve this, I used a method that [duplicates the last item of each section](./src/FlashSectionList.tsx#L219-L232) whenever empty spaces occur.
+To resolve this, [I wrap the item with a View and use the `onLayout` of that View to calculate the size of the blank space.](./src/FlashSectionList.tsx#L246-L254)
+
+To fully take advantage of reusability, I didn't limit the wrapping to just the last item.
+
+As a result, the layout of all items within a section must be consistent.
 
 However, I am unsure of what issues this approach might cause.
 
