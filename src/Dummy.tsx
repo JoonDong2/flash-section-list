@@ -1,45 +1,59 @@
 import { useEffect, useMemo, useState } from 'react';
 import { View } from 'react-native';
 
-interface Size {
+interface Layout {
   width: number;
   height: number;
 }
 
-abstract class Comparator<T> {
+class LayoutManager {
+  horizontal?: boolean | null;
   accuracy: number;
-  constructor(accuracy: number) {
+
+  constructor({
+    horizontal,
+    accuracy = 2,
+  }: {
+    horizontal?: boolean | null;
+    accuracy?: number;
+  }) {
+    this.horizontal = horizontal;
     this.accuracy = accuracy;
   }
-  abstract isChanged(size1: T, size2: T): boolean;
-}
 
-class SizeComparator extends Comparator<Size> {
-  override isChanged(size1: Size, size2: Size): boolean {
-    return (
-      Math.abs(size1.height - size2.height) > this.accuracy ||
-      Math.abs(size1.width - size2.width) > this.accuracy
-    );
+  getSize(layout?: Layout) {
+    return this.horizontal ? layout?.width : layout?.height;
+  }
+
+  isChanged(a?: Layout, b?: Layout) {
+    const sizeA = this.getSize(a);
+    const sizeB = this.getSize(b);
+    if (sizeA === undefined || sizeB === undefined) return true;
+    return Math.abs(sizeA - sizeB) > this.accuracy;
+  }
+
+  getSizeProperty() {
+    return this.horizontal ? 'width' : 'height';
   }
 }
 
-type Listener = (size: Size) => void;
+type Listener = (size: Layout) => void;
 
 class Dummy {
   type = '~d!u@m#m$y%^&*()';
-  comparator: Comparator<Size>;
+  layoutManager: LayoutManager;
 
-  constructor(comparator: Comparator<Size>) {
-    this.comparator = comparator;
+  constructor(layoutManager: LayoutManager) {
+    this.layoutManager = layoutManager;
   }
 
-  dummySizes: Map<number, Size> = new Map();
-  dummyListeners: Map<number, Set<Listener>> = new Map();
+  layouts: Map<number, Layout> = new Map();
+  listener: Map<number, Set<Listener>> = new Map();
   addListener(sectionIndex: number, listener: Listener) {
     let listeners = this.getListeners(sectionIndex);
     if (!listeners) {
       listeners = new Set();
-      this.dummyListeners.set(sectionIndex, listeners);
+      this.listener.set(sectionIndex, listeners);
     }
     listeners.add(listener);
 
@@ -48,37 +62,34 @@ class Dummy {
       if (!listeners) return;
       listeners.delete(listener);
       if (listeners.size === 0) {
-        this.dummyListeners.delete(sectionIndex);
+        this.listener.delete(sectionIndex);
       }
     };
   }
 
   getListeners(sectionIndex: number) {
-    return this.dummyListeners.get(sectionIndex);
+    return this.listener.get(sectionIndex);
   }
 
-  emitSize(sectionIndex: number, size: Size) {
-    const oldSize = this.getSize(sectionIndex);
-    if (oldSize && !this.comparator.isChanged(oldSize, size)) {
+  emitSize(sectionIndex: number, size: Layout) {
+    const oldSize = this.getLayout(sectionIndex);
+    if (oldSize && !this.layoutManager.isChanged(oldSize, size)) {
       return;
     }
 
-    this.setSize(sectionIndex, size);
+    this.setLayout(sectionIndex, size);
     const listeners = this.getListeners(sectionIndex);
     listeners?.forEach((listener) => {
       listener(size);
     });
   }
 
-  getSize(sectionIndex: number) {
-    return this.dummySizes.get(sectionIndex);
+  getLayout(sectionIndex: number) {
+    return this.layouts.get(sectionIndex);
   }
 
-  setSize(sectionIndex: number, { width, height }: Size) {
-    this.dummySizes.set(sectionIndex, {
-      width: Math.round(width),
-      height: Math.round(height),
-    });
+  setLayout(sectionIndex: number, { width, height }: Layout) {
+    this.layouts.set(sectionIndex, { width, height });
   }
 
   View = ({
@@ -88,15 +99,14 @@ class Dummy {
     sectionIndex: number;
     disabled?: boolean;
   }) => {
-    const [size, setSize] = useState<Partial<Size>>({});
+    const [size, setSize] = useState<number | undefined>();
     useEffect(() => {
       if (disabled) return;
-      const size = this.dummySizes.get(sectionIndex);
-      if (size) {
-        setSize(size);
-      }
-      const clean = this.addListener(sectionIndex, (size) => {
-        setSize(size);
+      const layout = this.getLayout(sectionIndex);
+      setSize(this.layoutManager.getSize(layout));
+
+      const clean = this.addListener(sectionIndex, (layout) => {
+        setSize(this.layoutManager.getSize(layout));
       });
       return () => {
         clean();
@@ -107,8 +117,7 @@ class Dummy {
       <View
         style={
           !disabled && {
-            width: size.width,
-            height: size.height,
+            [this.layoutManager.getSizeProperty()]: size,
           }
         }
       />
@@ -116,10 +125,16 @@ class Dummy {
   };
 }
 
-export const useDummy = () => {
+export const useDummy = ({
+  horizontal,
+  accuracy = 2,
+}: {
+  horizontal?: boolean | null;
+  accuracy?: number;
+}) => {
   return useMemo(() => {
-    return new Dummy(new SizeComparator(2));
-  }, []);
+    return new Dummy(new LayoutManager({ horizontal, accuracy }));
+  }, [horizontal, accuracy]);
 };
 
 export default Dummy;

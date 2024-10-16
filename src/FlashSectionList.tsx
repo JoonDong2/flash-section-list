@@ -67,10 +67,10 @@ function FlashSectionList(
   },
   ref: any
 ) {
-  const Dummy = useDummy();
-
   let { sections, ...props } = propsOrigin;
   props = omit(propsOrigin, omitProps, false);
+
+  const Dummy = useDummy({ horizontal: props.horizontal });
 
   const {
     dataSections,
