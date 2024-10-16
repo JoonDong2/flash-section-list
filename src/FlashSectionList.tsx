@@ -8,8 +8,7 @@ import { useMemo } from 'react';
 import { lcm, omit } from './utils';
 import React from 'react';
 import { View } from 'react-native';
-
-const opacity0 = { opacity: 0 } as const;
+import { useDummy } from './Dummy';
 
 export interface ElementSection {
   element: React.ReactElement | null;
@@ -48,10 +47,6 @@ const convertDataSectionFrom = (section: ElementSection): DataSection<any> => {
   };
 };
 
-const DUMMY = {
-  type: '~d!u@m#m$y%^&*()',
-} as const;
-
 const omitProps = [
   'data',
   'renderItem',
@@ -72,6 +67,8 @@ function FlashSectionList(
   },
   ref: any
 ) {
+  const Dummy = useDummy();
+
   let { sections, ...props } = propsOrigin;
   props = omit(propsOrigin, omitProps, false);
 
@@ -139,7 +136,7 @@ function FlashSectionList(
         section.dummyCount = dummyCount;
 
         for (let i = 0; i < dummyCount; i++) {
-          acc.push(DUMMY);
+          acc.push(Dummy);
         }
 
         if (footer) {
@@ -164,7 +161,7 @@ function FlashSectionList(
       stickyHeaderIndices,
       numOfColumns: lcm(numOfColumnArray),
     };
-  }, [sections]);
+  }, [Dummy, sections]);
 
   // binary search
   const getSectionIndexOf = (index: number) => {
@@ -217,17 +214,14 @@ function FlashSectionList(
         const headerOffset = section.header ? 1 : 0;
 
         const dataLastIndex = section.data.length - 1;
-        const lastItem = section.data[dataLastIndex];
+        const localIndex = index - sectionStartIndex - headerOffset;
 
-        if (item === DUMMY && lastItem) {
+        if (item === Dummy) {
+          const isLastDummy =
+            localIndex === dataLastIndex + (section.dummyCount ?? 0);
+
           return (
-            <View pointerEvents="none" style={opacity0}>
-              {section.renderItem({
-                index: dataLastIndex,
-                item: lastItem,
-                ...etc,
-              })}
-            </View>
+            <Dummy.View sectionIndex={sectionIndex} disabled={!isLastDummy} />
           );
         }
 
@@ -248,13 +242,23 @@ function FlashSectionList(
           return section.footer?.element ?? null;
         }
 
-        const localIndex = index - sectionStartIndex - headerOffset;
-
-        return section.renderItem({
-          index: localIndex,
-          item,
-          ...etc,
-        });
+        return (
+          <View
+            onLayout={(e) => {
+              const layout = e.nativeEvent?.layout;
+              if (!layout) return;
+              const { width, height } = layout;
+              if (!width && !height) return;
+              Dummy.emitSize(sectionIndex, { width, height });
+            }}
+          >
+            {section.renderItem({
+              index: localIndex,
+              item,
+              ...etc,
+            })}
+          </View>
+        );
       }}
       getItemType={(item, index) => {
         const sectionIndex = getSectionIndexOf(index);
@@ -264,8 +268,8 @@ function FlashSectionList(
           return -1;
         }
 
-        if (item === DUMMY) {
-          return DUMMY.type + sectionIndex;
+        if (item === Dummy) {
+          return Dummy.type;
         }
 
         const headerOffset = section.header ? 1 : 0;
