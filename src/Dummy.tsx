@@ -88,8 +88,8 @@ class Dummy {
     return this.layouts.get(sectionIndex);
   }
 
-  setLayout(sectionIndex: number, { width, height }: Layout) {
-    this.layouts.set(sectionIndex, { width, height });
+  setLayout(sectionIndex: number, layout: Layout) {
+    this.layouts.set(sectionIndex, layout);
   }
 
   View = ({
