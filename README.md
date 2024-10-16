@@ -127,7 +127,7 @@ To resolve this, [I wrap the item with a View and use the `onLayout` of that Vie
 
 To fully take advantage of reusability, I didn't limit the wrapping to just the last item.
 
-As a result, the layout of all items within a section must be consistent.
+As a result, in each section, item heights must be the same in vertical list. (The opposite applies for horizontal list)
 
 ### Screen Jitter
 
