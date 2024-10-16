@@ -131,7 +131,7 @@ As a result, in each section, item heights must be the same in vertical list. (T
 
 ### Screen Jitter
 
-There is an issue in the iPhone simulator where the screen shakes when scrolling to the edges.
+There is sometimes an issue in the iPhone simulator where the screen shakes when scrolling to the edges.
 
 This issue was not observed on the Android emulator, or on actual iPhone and Android devices.
 
