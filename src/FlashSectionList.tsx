@@ -249,7 +249,7 @@ function FlashSectionList(
               if (!layout) return;
               const { width, height } = layout;
               if (!width && !height) return;
-              Dummy.emitSize(sectionIndex, { width, height });
+              Dummy.emitSize(sectionIndex, localIndex, { width, height });
             }}
           >
             {section.renderItem({

@@ -47,7 +47,8 @@ class Dummy {
     this.layoutManager = layoutManager;
   }
 
-  layouts: Map<number, Layout> = new Map();
+  localIndices: Map<number, number> = new Map(); // key: sectionIndex, value: localIndex
+  layouts: Map<number, Layout> = new Map(); // key: sectionIndex, value: Layout
   listener: Map<number, Set<Listener>> = new Map();
   addListener(sectionIndex: number, listener: Listener) {
     let listeners = this.getListeners(sectionIndex);
@@ -71,7 +72,11 @@ class Dummy {
     return this.listener.get(sectionIndex);
   }
 
-  emitSize(sectionIndex: number, size: Layout) {
+  emitSize(sectionIndex: number, localIndex: number, size: Layout) {
+    const oldLocalIndex = this.getLocalIndex(sectionIndex);
+    if (localIndex < oldLocalIndex) return;
+    this.setLocalIndex(sectionIndex, localIndex);
+
     const oldSize = this.getLayout(sectionIndex);
     if (oldSize && !this.layoutManager.isChanged(oldSize, size)) {
       return;
@@ -82,6 +87,14 @@ class Dummy {
     listeners?.forEach((listener) => {
       listener(size);
     });
+  }
+
+  getLocalIndex(sectionIndex: number) {
+    return this.localIndices.get(sectionIndex) ?? 0;
+  }
+
+  setLocalIndex(sectionIndex: number, localIndex: number) {
+    this.localIndices.set(sectionIndex, localIndex);
   }
 
   getLayout(sectionIndex: number) {
