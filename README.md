@@ -1,8 +1,8 @@
 # flash-section-list
 
-The library, which is dependent on `@shopify/flash-list`, overrides the [`overrideItemLayout` function internally](./src/FlashSectionList.tsx#295-L320) to ensure that sections with different `numOfColumns` are rendered properly.
+The library, which is dependent on `@shopify/flash-list`, overrides the [`overrideItemLayout` function internally](./src/FlashSectionList.tsx#302-L333) to ensure that sections with different `numOfColumns` are rendered properly.
 
-Additionally, for enhanced performance, the library also [overrides the `getItemType` function internally](./src/FlashSectionList.tsx#L263-L294) based on the type information of the section and the header or footer.
+Additionally, for enhanced performance, the library also [overrides the `getItemType` function internally](./src/FlashSectionList.tsx#L271-L301) based on the type information of the section and the header or footer.
 
 You can [set `sticky` properties](./example/src/App.tsx#L31) not only for section items but also for footers or headers.
 
@@ -11,6 +11,7 @@ interface ElementSection {
   element: React.ReactElement | null;
   sticky?: boolean;
   type?: string;
+  size?: number;
 }
 
 interface DataSection<ItemT> {
@@ -21,6 +22,7 @@ interface DataSection<ItemT> {
   footer?: ElementSection;
   stickyHeaderIndices?: number[];
   numOfColumns?: number;
+  itemSize?: number;
 }
 ```
 
@@ -85,7 +87,7 @@ const sections =[{
 
 ### Sections
 
-This library [parses the `sections` array whenever it changes.](./src/FlashSectionList.tsx#L75-L155)  
+This library [parses the `sections` array whenever it changes.](./src/FlashSectionList.tsx#L82-L173)  
 Therefore, you should avoid changing the sections array.
 
 ### Blank
@@ -94,7 +96,7 @@ When `numOfColumns` is set to 3 and there are 5 items, an empty space will occur
 
 If this empty space is not physically filled, the next row will move up, causing an alignment issue.
 
-To resolve this, [I wrap the item with a View and use the `onLayout` of that View to calculate the size of the blank space.](./src/FlashSectionList.tsx#L246-L254)
+To resolve this, [I wrap the item with a View and use the `onLayout` of that View to calculate the size of the blank space.](./src/FlashSectionList.tsx#L254-L268)
 
 To fully take advantage of reusability, I didn't limit the wrapping to just the last item.
 
@@ -105,6 +107,57 @@ As a result, in each section, item heights must be the same in vertical list. (T
 There is sometimes an issue in the iPhone simulator where the screen shakes when scrolling to the edges.
 
 This issue was not observed on the Android emulator, or on actual iPhone and Android devices.
+
+### Observable
+
+This library can be used with[`react-native-observable-list`](https://www.npmjs.com/package/react-native-observable-list) to observe the visibility of items.
+
+```js
+import {Dimensions, View} from 'react-native';
+import {
+  type Section,
+  FlashSectionListBuilder,
+} from 'flash-section-list';
+import {observe, useInViewPort} from 'react-native-observable-list';
+
+const screenWidth = Dimensions.get('screen').width;
+
+const builder = FlashSectionListBuilder();
+const ObservableList = observe(FlashList);
+builder.setFlashList(ObservableList);
+const ObservableFlashSectionList = builder.build();
+
+const Header = () => {
+  useInViewPort(() => {
+    console.log('visible');
+    return () => {
+      console.log('disappear');
+    };
+  }, []);
+  return <View style={{width: screenWidth, height: 300, backgroundColor: 'tomato'}} />;
+};
+
+const sections: Section[] = [
+  {
+    header: <Header />,
+    // data, renderItem, ...
+  },
+  // or
+  {
+    element: <Header />,
+  }
+]
+```
+
+### Scroll Indicator Position
+
+`flash-list` internally sets the [`forceNonDeterministicRendering` property of `recyclerlistview`](https://github.com/Flipkart/recyclerlistview?tab=readme-ov-file#why) to true.
+
+Because of this property, the layout of the items is recalculated every time, so the size and position of the scroll indicator are unstable.
+
+To solve this problem, you can use [the `size` and `itemSize` properties of Section.](./src/FlashSectionList.tsx#L17-L28)
+
+The size is applied to the `height` in a vertical list, or to the `width` in a horizontal list.
 
 ## License
 
