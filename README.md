@@ -43,7 +43,7 @@ npm install @shopify/flash-list flash-section-list
 ## Usage
 
 ```js
-import FlashSectionList from 'flash-section-list';
+import FlashSectionList, { type Section } from 'flash-section-list';
 import { Dimensions, View } from 'react-native';
 
 const screenWidth = Dimensions.get('screen').width;
