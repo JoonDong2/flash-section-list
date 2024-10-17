@@ -228,6 +228,10 @@ function FlashSectionList(
         }
 
         const isHeader = section.header && index === sectionStartIndex;
+        if (isHeader) {
+          return section.header!.element;
+        }
+
         const isFooter =
           section.footer &&
           index ===
@@ -235,13 +239,8 @@ function FlashSectionList(
               section.data.length +
               headerOffset +
               (section.dummyCount ?? 0);
-
-        if (isHeader) {
-          return section.header?.element ?? null;
-        }
-
         if (isFooter) {
-          return section.footer?.element ?? null;
+          return section.footer!.element;
         }
 
         return (
@@ -276,6 +275,10 @@ function FlashSectionList(
 
         const headerOffset = section.header ? 1 : 0;
         const isHeader = section.header && index === sectionStartIndex;
+        if (isHeader) {
+          return section.header!.type ?? `header-${sectionIndex}`;
+        }
+
         const isFooter =
           section.footer &&
           index ===
@@ -283,13 +286,8 @@ function FlashSectionList(
               section.data.length +
               headerOffset +
               (section.dummyCount ?? 0);
-
-        if (isHeader) {
-          return section.header?.type ?? `header-${sectionIndex}`;
-        }
-
         if (isFooter) {
-          return section.footer?.type ?? `footer-${sectionIndex}`;
+          return section.footer!.type ?? `footer-${sectionIndex}`;
         }
 
         return section.type ?? sectionIndex;
