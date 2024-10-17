@@ -151,7 +151,7 @@ const sections: Section[] = [
 
 ### Scroll Indicator Position
 
-`flash-list` internally sets the [`forceNonDeterministicRendering` property of `recyclerlistview`](https://github.com/Flipkart/recyclerlistview?tab=readme-ov-file#why) to true.
+`flash-list` internally sets the [`forceNonDeterministicRendering` property of `recyclerlistview`](https://github.com/Shopify/flash-list/blob/v1.7.1/src/FlashList.tsx#L367) to true.
 
 Because of this property, the layout of the items is recalculated every time, so the size and position of the scroll indicator are unstable.
 
