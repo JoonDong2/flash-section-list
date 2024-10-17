@@ -72,37 +72,21 @@ class Dummy {
     return this.listener.get(sectionIndex);
   }
 
-  emitSize(sectionIndex: number, localIndex: number, size: Layout) {
-    const oldLocalIndex = this.getLocalIndex(sectionIndex);
+  emitSize(sectionIndex: number, localIndex: number, layout: Layout) {
+    const oldLocalIndex = this.localIndices.get(sectionIndex) ?? 0;
     if (localIndex < oldLocalIndex) return;
-    this.setLocalIndex(sectionIndex, localIndex);
+    this.localIndices.set(sectionIndex, localIndex);
 
-    const oldSize = this.getLayout(sectionIndex);
-    if (oldSize && !this.layoutManager.isChanged(oldSize, size)) {
+    const oldLayout = this.layouts.get(sectionIndex);
+    if (oldLayout && !this.layoutManager.isChanged(oldLayout, layout)) {
       return;
     }
 
-    this.setLayout(sectionIndex, size);
+    this.layouts.set(sectionIndex, layout);
     const listeners = this.getListeners(sectionIndex);
     listeners?.forEach((listener) => {
-      listener(size);
+      listener(layout);
     });
-  }
-
-  getLocalIndex(sectionIndex: number) {
-    return this.localIndices.get(sectionIndex) ?? 0;
-  }
-
-  setLocalIndex(sectionIndex: number, localIndex: number) {
-    this.localIndices.set(sectionIndex, localIndex);
-  }
-
-  getLayout(sectionIndex: number) {
-    return this.layouts.get(sectionIndex);
-  }
-
-  setLayout(sectionIndex: number, layout: Layout) {
-    this.layouts.set(sectionIndex, layout);
   }
 
   View = ({
@@ -115,7 +99,7 @@ class Dummy {
     const [size, setSize] = useState<number | undefined>();
     useEffect(() => {
       if (disabled) return;
-      const layout = this.getLayout(sectionIndex);
+      const layout = this.layouts.get(sectionIndex);
       setSize(this.layoutManager.getSize(layout));
 
       const clean = this.addListener(sectionIndex, (layout) => {
