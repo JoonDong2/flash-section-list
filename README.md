@@ -2,6 +2,8 @@
 
 The library, which is dependent on `@shopify/flash-list`, overrides the [`overrideItemLayout` function internally](./src/FlashSectionList.tsx#295-L320) to ensure that sections with different `numOfColumns` are rendered properly.
 
+![demo](./flash-section-list.png)
+
 Additionally, for enhanced performance, the library also [overrides the `getItemType` function internally](./src/FlashSectionList.tsx#L263-L294) based on the type information of the section and the header or footer.
 
 You can [set `sticky` properties](./example/src/App.tsx#L31) not only for section items but also for footers or headers.
