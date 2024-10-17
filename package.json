@@ -1,6 +1,6 @@
 {
   "name": "flash-section-list",
-  "version": "2.1.5",
+  "version": "2.1.6",
   "description": "SectionList base on FlashList",
   "source": "./src/index.tsx",
   "main": "./lib/commonjs/index.js",
