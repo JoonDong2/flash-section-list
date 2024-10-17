@@ -14,6 +14,7 @@ export interface ElementSection {
   element: React.ReactElement | null;
   sticky?: boolean;
   type?: string;
+  size?: number;
 }
 
 export interface DataSection<ItemT> {
@@ -24,6 +25,7 @@ export interface DataSection<ItemT> {
   footer?: ElementSection;
   stickyHeaderIndices?: number[];
   numOfColumns?: number;
+  itemSize?: number; // vertical list -> height, horizontal list -> width
 }
 
 export type WithDummyCount<T> = T & {
@@ -301,6 +303,7 @@ function FlashSectionList(
         }
 
         const headerOffset = section.header ? 1 : 0;
+
         const isHeader = section.header && index === sectionStartIndex;
         const isFooter =
           section.footer &&
@@ -310,12 +313,17 @@ function FlashSectionList(
               headerOffset +
               (section.dummyCount ?? 0);
 
-        if (isHeader || isFooter) {
+        if (isHeader) {
           layout.span = numOfColumns;
+          layout.size = section.header!.size;
+        } else if (isFooter) {
+          layout.span = numOfColumns;
+          layout.size = section.footer!.size;
         } else {
           layout.span = section.numOfColumns
             ? numOfColumns / section.numOfColumns
             : numOfColumns;
+          layout.size = section.itemSize;
         }
       }}
     />
