@@ -2,8 +2,6 @@
 
 The library, which is dependent on `@shopify/flash-list`, overrides the [`overrideItemLayout` function internally](./src/FlashSectionList.tsx#295-L320) to ensure that sections with different `numOfColumns` are rendered properly.
 
-![demo](./flash-section-list.png)
-
 Additionally, for enhanced performance, the library also [overrides the `getItemType` function internally](./src/FlashSectionList.tsx#L263-L294) based on the type information of the section and the header or footer.
 
 You can [set `sticky` properties](./example/src/App.tsx#L31) not only for section items but also for footers or headers.
@@ -49,40 +47,11 @@ import FlashSectionList from 'flash-section-list';
 import { Dimensions, View } from 'react-native';
 
 const screenWidth = Dimensions.get('screen').width;
+```
 
-const sections: (DataSection<any> | ElementSection)[] = [
-  {
-    data: Array.from({ length: 100 }),
-    numOfColumns: 1, // !
-    renderItem: () => {
-      return <View />;
-    },
-    header: {
-      element: <View />,
-      sticky: true,
-    },
-    footer: {
-      element: <View/>,
-      sticky: true,
-    },
-  },
-  {
-    element: <View />,
-    sticky: true,
-  }
-  {
-    data: Array.from({ length: 100 }),
-    numOfColumns: 2, // !!
-    header: {
-      element:<View />,
-      sticky: true,
-    },
-    renderItem: ({ index }: { index: number }) => {
-      return <View  />;
-    },
-  },
-];
+![demo](./flash-section-list.png)
 
+```js
 export default function App() {
   return <FlashSectionList estimatedItemSize={110} sections={sections} />;
 }
