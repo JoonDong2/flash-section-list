@@ -155,7 +155,7 @@ const sections: Section[] = [
 
 Because of this property, the layout of the items is recalculated every time, so the size and position of the scroll indicator are unstable.
 
-To solve this problem, you can use [the `size` and `itemSize` properties of Section.](./src/FlashSectionList.tsx#L339-L47)
+To solve this problem, you can use [the `size` and `itemSize` properties of Section.](./src/FlashSectionList.tsx#L339-L347)
 
 The size is applied to the `height` in a vertical list, or to the `width` in a horizontal list.
 
