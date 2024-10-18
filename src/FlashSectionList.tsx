@@ -66,7 +66,13 @@ const omitProps = [
 ] as const;
 
 export function FlashSectionListBuilder() {
-  const buildProps = {
+  const buildProps: {
+    FlashListComponent: React.ComponentType<
+      FlashListProps<any> & { ref?: any }
+    >;
+    DummyClass: typeof Dummy;
+    LayoutManagerClass: typeof LayoutManager;
+  } = {
     FlashListComponent: FlashList,
     DummyClass: Dummy,
     LayoutManagerClass: LayoutManager,
