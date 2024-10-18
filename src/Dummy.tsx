@@ -1,40 +1,10 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { View } from 'react-native';
+import type LayoutManager from './LayoutManager';
 
 interface Layout {
   width: number;
   height: number;
-}
-
-class LayoutManager {
-  horizontal?: boolean | null;
-  accuracy: number;
-
-  constructor({
-    horizontal,
-    accuracy = 2,
-  }: {
-    horizontal?: boolean | null;
-    accuracy?: number;
-  }) {
-    this.horizontal = horizontal;
-    this.accuracy = accuracy;
-  }
-
-  getSize(layout?: Layout) {
-    return this.horizontal ? layout?.width : layout?.height;
-  }
-
-  isChanged(a?: Layout, b?: Layout) {
-    const sizeA = this.getSize(a);
-    const sizeB = this.getSize(b);
-    if (sizeA === undefined || sizeB === undefined) return true;
-    return Math.abs(sizeA - sizeB) > this.accuracy;
-  }
-
-  getSizeProperty() {
-    return this.horizontal ? 'width' : 'height';
-  }
 }
 
 type Listener = (size: Layout) => void;
@@ -108,17 +78,5 @@ class Dummy {
     );
   };
 }
-
-export const useDummy = ({
-  horizontal,
-  accuracy = 2,
-}: {
-  horizontal?: boolean | null;
-  accuracy?: number;
-}) => {
-  return useMemo(() => {
-    return new Dummy(new LayoutManager({ horizontal, accuracy }));
-  }, [horizontal, accuracy]);
-};
 
 export default Dummy;

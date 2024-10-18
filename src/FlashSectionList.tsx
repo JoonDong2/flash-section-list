@@ -8,7 +8,9 @@ import { useMemo } from 'react';
 import { lcm, omit } from './utils';
 import React from 'react';
 import { View } from 'react-native';
-import { useDummy } from './Dummy';
+import { useDummy } from './useDummy';
+import Dummy from './Dummy';
+import LayoutManager from './LayoutManager';
 
 export interface ElementSection {
   element: React.ReactElement | null;
@@ -65,280 +67,299 @@ const omitProps = [
 
 export function FlashSectionListBuilder() {
   const buildProps = {
-    FlashList,
+    FlashListComponent: FlashList,
+    DummyClass: Dummy,
+    LayoutManagerClass: LayoutManager,
   };
 
-  function FlashSectionList(
-    propsOrigin: Omit<FlashListProps<any>, (typeof omitProps)[number]> & {
-      sections: Section[];
-    },
-    ref: any
-  ) {
-    let { sections, ...props } = propsOrigin;
-    props = omit(propsOrigin, omitProps, false);
-
-    const Dummy = useDummy({ horizontal: props.horizontal });
-
-    const {
-      dataSections,
-      sectionStartIndices,
-      data,
-      stickyHeaderIndices,
-      numOfColumns,
-    } = useMemo(() => {
-      const dataSections: WithDummyCount<DataSection<any>>[] = [];
-
-      const numOfColumnArray: number[] = [];
-
-      const stickyHeaderIndices: number[] = [];
-      let index = 0;
-
-      const sectionStartIndices: number[] = [];
-
-      const data = sections.reduce<Array<any>>(
-        (acc, cur: DataSection<any> | ElementSection) => {
-          const section: WithDummyCount<DataSection<any>> = isElementSection(
-            cur
-          )
-            ? convertDataSectionFrom(cur as ElementSection)
-            : (cur as DataSection<any>);
-
-          dataSections.push(section);
-
-          const {
-            data,
-            header,
-            footer,
-            stickyHeaderIndices: stickyHeaderIndicesOfSection,
-            numOfColumns = 1,
-          } = section;
-          let length = data.length;
-
-          sectionStartIndices.push(index);
-          numOfColumnArray.push(numOfColumns);
-
-          if (header) {
-            if (header.sticky) {
-              stickyHeaderIndices.push(index);
-            }
-
-            length += 1;
-            acc.push(header);
-          }
-
-          acc.push(...data);
-          if (stickyHeaderIndicesOfSection) {
-            stickyHeaderIndices.push(
-              ...stickyHeaderIndicesOfSection.map(
-                (indexWithinSection) =>
-                  indexWithinSection + index + (header ? 1 : 0)
-              )
-            );
-          }
-
-          const dummyCount =
-            data.length % numOfColumns !== 0
-              ? numOfColumns - (data.length % numOfColumns)
-              : 0;
-
-          length += dummyCount;
-          section.dummyCount = dummyCount;
-
-          for (let i = 0; i < dummyCount; i++) {
-            acc.push(Dummy);
-          }
-
-          if (footer) {
-            if (footer.sticky) {
-              stickyHeaderIndices.push(index + length);
-            }
-            length += 1;
-            acc.push(footer);
-          }
-
-          index += length;
-
-          return acc;
-        },
-        []
-      );
-
-      return {
-        dataSections,
-        sectionStartIndices,
-        data,
-        stickyHeaderIndices,
-        numOfColumns: lcm(numOfColumnArray),
-      };
-    }, [Dummy, sections]);
-
-    // binary search
-    const getSectionIndexOf = (index: number) => {
-      if (!sectionStartIndices?.length) return -1;
-
-      let low = 0;
-      let high = sectionStartIndices.length - 1;
-
-      while (low <= high) {
-        const mid = Math.floor((low + high) / 2);
-        const midValue = sectionStartIndices[mid]!;
-        if (midValue === index) {
-          return mid;
-        }
-        if (low === mid || high === mid) {
-          // return low or high
-          if (sectionStartIndices[high]! <= index) {
-            return high;
-          }
-          return low;
-        }
-
-        // left
-        if (midValue > index) {
-          high = mid;
-        }
-        // right
-        else if (midValue < index) {
-          low = mid;
-        }
-      }
-      return -1;
-    };
-
-    return (
-      <buildProps.FlashList
-        {...props}
-        ref={ref}
-        data={data}
-        stickyHeaderIndices={stickyHeaderIndices}
-        numColumns={numOfColumns}
-        renderItem={({ index, item, ...etc }: ListRenderItemInfo<any>) => {
-          const sectionIndex = getSectionIndexOf(index);
-          const section = dataSections[sectionIndex];
-          const sectionStartIndex = sectionStartIndices[sectionIndex];
-          if (!section || sectionStartIndex === undefined) {
-            return null;
-          }
-
-          const headerOffset = section.header ? 1 : 0;
-
-          const dataLastIndex = section.data.length - 1;
-          const localIndex = index - sectionStartIndex - headerOffset;
-
-          if (item === Dummy) {
-            const isLastDummy =
-              localIndex === dataLastIndex + (section.dummyCount ?? 0);
-
-            return (
-              <Dummy.View sectionIndex={sectionIndex} disabled={!isLastDummy} />
-            );
-          }
-
-          const isHeader = section.header && index === sectionStartIndex;
-          if (isHeader) {
-            return section.header!.element;
-          }
-
-          const isFooter =
-            section.footer &&
-            index ===
-              sectionStartIndex +
-                section.data.length +
-                headerOffset +
-                (section.dummyCount ?? 0);
-          if (isFooter) {
-            return section.footer!.element;
-          }
-
-          return (
-            <View
-              onLayout={(e) => {
-                const layout = e.nativeEvent?.layout;
-                if (!layout) return;
-                const { width, height } = layout;
-                if (!width && !height) return;
-                Dummy.emitSize(sectionIndex, localIndex, { width, height });
-              }}
-            >
-              {section.renderItem({
-                index: localIndex,
-                item,
-                ...etc,
-              })}
-            </View>
-          );
-        }}
-        getItemType={(item, index) => {
-          const sectionIndex = getSectionIndexOf(index);
-          const section = dataSections[sectionIndex];
-          const sectionStartIndex = sectionStartIndices[sectionIndex];
-          if (!section || sectionStartIndex === undefined) {
-            return -1;
-          }
-
-          if (item === Dummy) {
-            return Dummy.type;
-          }
-
-          const headerOffset = section.header ? 1 : 0;
-          const isHeader = section.header && index === sectionStartIndex;
-          if (isHeader) {
-            return section.header!.type ?? `header-${sectionIndex}`;
-          }
-
-          const isFooter =
-            section.footer &&
-            index ===
-              sectionStartIndex +
-                section.data.length +
-                headerOffset +
-                (section.dummyCount ?? 0);
-          if (isFooter) {
-            return section.footer!.type ?? `footer-${sectionIndex}`;
-          }
-
-          return section.type ?? sectionIndex;
-        }}
-        overrideItemLayout={(layout, _, index) => {
-          const sectionIndex = getSectionIndexOf(index);
-          const section = dataSections[sectionIndex];
-          const sectionStartIndex = sectionStartIndices[sectionIndex];
-          if (!section || sectionStartIndex === undefined) {
-            return;
-          }
-
-          const headerOffset = section.header ? 1 : 0;
-
-          const isHeader = section.header && index === sectionStartIndex;
-          const isFooter =
-            section.footer &&
-            index ===
-              sectionStartIndex +
-                section.data.length +
-                headerOffset +
-                (section.dummyCount ?? 0);
-
-          if (isHeader) {
-            layout.span = numOfColumns;
-            layout.size = section.header!.size;
-          } else if (isFooter) {
-            layout.span = numOfColumns;
-            layout.size = section.footer!.size;
-          } else {
-            layout.span = section.numOfColumns
-              ? numOfColumns / section.numOfColumns
-              : numOfColumns;
-            layout.size = section.itemSize;
-          }
-        }}
-      />
-    );
-  }
-
   return {
-    build: () => React.forwardRef(FlashSectionList),
-    setFlashList: (FlashList: any) => {
-      buildProps.FlashList = FlashList;
+    build: () => {
+      const FlashListComponent = buildProps.FlashListComponent;
+      const DummyClass = buildProps.DummyClass;
+      const LayoutManagerClass = buildProps.LayoutManagerClass;
+
+      function FlashSectionList(
+        propsOrigin: Omit<FlashListProps<any>, (typeof omitProps)[number]> & {
+          sections: Section[];
+        },
+        ref: any
+      ) {
+        let { sections, ...props } = propsOrigin;
+        props = omit(propsOrigin, omitProps, false);
+
+        const Dummy = useDummy({
+          horizontal: props.horizontal,
+          DummyClass,
+          LayoutManagerClass,
+        });
+
+        const {
+          dataSections,
+          sectionStartIndices,
+          data,
+          stickyHeaderIndices,
+          numOfColumns,
+        } = useMemo(() => {
+          const dataSections: WithDummyCount<DataSection<any>>[] = [];
+
+          const numOfColumnArray: number[] = [];
+
+          const stickyHeaderIndices: number[] = [];
+          let index = 0;
+
+          const sectionStartIndices: number[] = [];
+
+          const data = sections.reduce<Array<any>>(
+            (acc, cur: DataSection<any> | ElementSection) => {
+              const section: WithDummyCount<DataSection<any>> =
+                isElementSection(cur)
+                  ? convertDataSectionFrom(cur as ElementSection)
+                  : (cur as DataSection<any>);
+
+              dataSections.push(section);
+
+              const {
+                data,
+                header,
+                footer,
+                stickyHeaderIndices: stickyHeaderIndicesOfSection,
+                numOfColumns = 1,
+              } = section;
+              let length = data.length;
+
+              sectionStartIndices.push(index);
+              numOfColumnArray.push(numOfColumns);
+
+              if (header) {
+                if (header.sticky) {
+                  stickyHeaderIndices.push(index);
+                }
+
+                length += 1;
+                acc.push(header);
+              }
+
+              acc.push(...data);
+              if (stickyHeaderIndicesOfSection) {
+                stickyHeaderIndices.push(
+                  ...stickyHeaderIndicesOfSection.map(
+                    (indexWithinSection) =>
+                      indexWithinSection + index + (header ? 1 : 0)
+                  )
+                );
+              }
+
+              const dummyCount =
+                data.length % numOfColumns !== 0
+                  ? numOfColumns - (data.length % numOfColumns)
+                  : 0;
+
+              length += dummyCount;
+              section.dummyCount = dummyCount;
+
+              for (let i = 0; i < dummyCount; i++) {
+                acc.push(Dummy);
+              }
+
+              if (footer) {
+                if (footer.sticky) {
+                  stickyHeaderIndices.push(index + length);
+                }
+                length += 1;
+                acc.push(footer);
+              }
+
+              index += length;
+
+              return acc;
+            },
+            []
+          );
+
+          return {
+            dataSections,
+            sectionStartIndices,
+            data,
+            stickyHeaderIndices,
+            numOfColumns: lcm(numOfColumnArray),
+          };
+        }, [Dummy, sections]);
+
+        // binary search
+        const getSectionIndexOf = (index: number) => {
+          if (!sectionStartIndices?.length) return -1;
+
+          let low = 0;
+          let high = sectionStartIndices.length - 1;
+
+          while (low <= high) {
+            const mid = Math.floor((low + high) / 2);
+            const midValue = sectionStartIndices[mid]!;
+            if (midValue === index) {
+              return mid;
+            }
+            if (low === mid || high === mid) {
+              // return low or high
+              if (sectionStartIndices[high]! <= index) {
+                return high;
+              }
+              return low;
+            }
+
+            // left
+            if (midValue > index) {
+              high = mid;
+            }
+            // right
+            else if (midValue < index) {
+              low = mid;
+            }
+          }
+          return -1;
+        };
+
+        return (
+          <FlashListComponent
+            {...props}
+            ref={ref}
+            data={data}
+            stickyHeaderIndices={stickyHeaderIndices}
+            numColumns={numOfColumns}
+            renderItem={({ index, item, ...etc }: ListRenderItemInfo<any>) => {
+              const sectionIndex = getSectionIndexOf(index);
+              const section = dataSections[sectionIndex];
+              const sectionStartIndex = sectionStartIndices[sectionIndex];
+              if (!section || sectionStartIndex === undefined) {
+                return null;
+              }
+
+              const headerOffset = section.header ? 1 : 0;
+
+              const dataLastIndex = section.data.length - 1;
+              const localIndex = index - sectionStartIndex - headerOffset;
+
+              if (item === Dummy) {
+                const isLastDummy =
+                  localIndex === dataLastIndex + (section.dummyCount ?? 0);
+
+                return (
+                  <Dummy.View
+                    sectionIndex={sectionIndex}
+                    disabled={!isLastDummy}
+                  />
+                );
+              }
+
+              const isHeader = section.header && index === sectionStartIndex;
+              if (isHeader) {
+                return section.header!.element;
+              }
+
+              const isFooter =
+                section.footer &&
+                index ===
+                  sectionStartIndex +
+                    section.data.length +
+                    headerOffset +
+                    (section.dummyCount ?? 0);
+              if (isFooter) {
+                return section.footer!.element;
+              }
+
+              return (
+                <View
+                  onLayout={(e) => {
+                    const layout = e.nativeEvent?.layout;
+                    if (!layout) return;
+                    const { width, height } = layout;
+                    if (!width && !height) return;
+                    Dummy.emitSize(sectionIndex, localIndex, { width, height });
+                  }}
+                >
+                  {section.renderItem({
+                    index: localIndex,
+                    item,
+                    ...etc,
+                  })}
+                </View>
+              );
+            }}
+            getItemType={(item, index) => {
+              const sectionIndex = getSectionIndexOf(index);
+              const section = dataSections[sectionIndex];
+              const sectionStartIndex = sectionStartIndices[sectionIndex];
+              if (!section || sectionStartIndex === undefined) {
+                return -1;
+              }
+
+              if (item === Dummy) {
+                return Dummy.type;
+              }
+
+              const headerOffset = section.header ? 1 : 0;
+              const isHeader = section.header && index === sectionStartIndex;
+              if (isHeader) {
+                return section.header!.type ?? `header-${sectionIndex}`;
+              }
+
+              const isFooter =
+                section.footer &&
+                index ===
+                  sectionStartIndex +
+                    section.data.length +
+                    headerOffset +
+                    (section.dummyCount ?? 0);
+              if (isFooter) {
+                return section.footer!.type ?? `footer-${sectionIndex}`;
+              }
+
+              return section.type ?? sectionIndex;
+            }}
+            overrideItemLayout={(layout, _, index) => {
+              const sectionIndex = getSectionIndexOf(index);
+              const section = dataSections[sectionIndex];
+              const sectionStartIndex = sectionStartIndices[sectionIndex];
+              if (!section || sectionStartIndex === undefined) {
+                return;
+              }
+
+              const headerOffset = section.header ? 1 : 0;
+
+              const isHeader = section.header && index === sectionStartIndex;
+              const isFooter =
+                section.footer &&
+                index ===
+                  sectionStartIndex +
+                    section.data.length +
+                    headerOffset +
+                    (section.dummyCount ?? 0);
+
+              if (isHeader) {
+                layout.span = numOfColumns;
+                layout.size = section.header!.size;
+              } else if (isFooter) {
+                layout.span = numOfColumns;
+                layout.size = section.footer!.size;
+              } else {
+                layout.span = section.numOfColumns
+                  ? numOfColumns / section.numOfColumns
+                  : numOfColumns;
+                layout.size = section.itemSize;
+              }
+            }}
+          />
+        );
+      }
+      return React.forwardRef(FlashSectionList);
+    },
+    setFlashList: (FlashListComponent: typeof FlashList) => {
+      buildProps.FlashListComponent = FlashListComponent;
+    },
+    setDummy: (DummyClass: typeof Dummy) => {
+      buildProps.DummyClass = DummyClass;
+    },
+    setLayoutManager: (LayoutManagerClass: typeof LayoutManager) => {
+      buildProps.LayoutManagerClass = LayoutManagerClass;
     },
   };
 }
