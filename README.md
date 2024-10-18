@@ -1,10 +1,10 @@
 # flash-section-list
 
-The library, which is dependent on `@shopify/flash-list`, overrides the [`overrideItemLayout` function internally](./src/FlashSectionList.tsx#302-L333) to ensure that sections with different `numOfColumns` are rendered properly.
+The library, which is dependent on `@shopify/flash-list`, overrides the [`overrideItemLayout` function internally](./src/FlashSectionList.tsx#L318-L349) to ensure that sections with different `numOfColumns` are rendered properly.
 
-Additionally, for enhanced performance, the library also [overrides the `getItemType` function internally](./src/FlashSectionList.tsx#L271-L301) based on the type information of the section and the header or footer.
+Additionally, for enhanced performance, the library also [overrides the `getItemType` function internally](./src/FlashSectionList.tsx#L287-L317) based on the type information of the section and the header or footer.
 
-You can [set `sticky` properties](./example/src/App.tsx#L31) not only for section items but also for footers or headers.
+You can [set `sticky` properties](./example/src/App.tsx#L33-L77) not only for section items but also for footers or headers.
 
 ```ts
 interface ElementSection {
@@ -63,7 +63,7 @@ export default function App() {
 
 The `type` of a Section refers to the type that will be applied to all items, excluding the `header` and `footer`.
 
-By default, the `index` of the Section is used. However, if items in different Sections share the same type, you may use the same type for them. (e.g., [Example](./example/src/App.tsx#L49))
+By default, the `index` of the Section is used. However, if items in different Sections share the same type, you may use the same type for them. (e.g., [Example](./example/src/App.tsx#L28-L50))
 
 It's recommended to use the same type for items with the same structure to encourage optimal reuse.
 
@@ -87,7 +87,7 @@ const sections =[{
 
 ### Sections
 
-This library [parses the `sections` array whenever it changes.](./src/FlashSectionList.tsx#L82-L173)  
+This library [parses the `sections` array whenever it changes.](./src/FlashSectionList.tsx#L96-L186)  
 Therefore, you should avoid changing the sections array.
 
 ### Blank
@@ -96,7 +96,7 @@ When `numOfColumns` is set to 3 and there are 5 items, an empty space will occur
 
 If this empty space is not physically filled, the next row will move up, causing an alignment issue.
 
-To resolve this, [I wrap the item with a View and use the `onLayout` of that View to calculate the size of the blank space.](./src/FlashSectionList.tsx#L254-L268)
+To resolve this, [I wrap the item with a View and use the `onLayout` of that View to calculate the size of the blank space.](./src/FlashSectionList.tsx#L271-L277)
 
 To fully take advantage of reusability, I didn't limit the wrapping to just the last item.
 
@@ -155,7 +155,7 @@ const sections: Section[] = [
 
 Because of this property, the layout of the items is recalculated every time, so the size and position of the scroll indicator are unstable.
 
-To solve this problem, you can use [the `size` and `itemSize` properties of Section.](./src/FlashSectionList.tsx#L17-L28)
+To solve this problem, you can use [the `size` and `itemSize` properties of Section.](./src/FlashSectionList.tsx#L339-L47)
 
 The size is applied to the `height` in a vertical list, or to the `width` in a horizontal list.
 

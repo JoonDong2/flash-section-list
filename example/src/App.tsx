@@ -30,6 +30,7 @@ const sections: Section[] = [
   {
     header: {
       element: <View style={{ height: 10 }} />,
+      sticky: true,
     },
     data: Array.from({ length: 300 }).map((_, index) => getImage(index)),
     renderItem: ({ item: uri }) => {
@@ -73,6 +74,7 @@ const sections: Section[] = [
       />
     ),
     type: 'element',
+    sticky: true,
   },
   {
     data: Array.from({ length: 300 }).map((_, index) => getImage(index)),
