@@ -358,7 +358,11 @@ export function FlashSectionListBuilder() {
       }
       return React.forwardRef(FlashSectionList);
     },
-    setFlashList: (FlashListComponent: typeof FlashList) => {
+    setFlashList: (
+      FlashListComponent: React.ComponentType<
+        FlashListProps<any> & { ref?: any }
+      >
+    ) => {
       buildProps.FlashListComponent = FlashListComponent;
     },
     setDummy: (DummyClass: typeof Dummy) => {
