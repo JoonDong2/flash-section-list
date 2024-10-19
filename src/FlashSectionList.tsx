@@ -4,10 +4,10 @@ import {
   type ListRenderItem,
   type ListRenderItemInfo,
 } from '@shopify/flash-list';
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import { lcm, omit } from './utils';
 import React from 'react';
-import { View } from 'react-native';
+import { View, type StyleProp, type ViewStyle } from 'react-native';
 import { useDummy } from './useDummy';
 import Dummy from './Dummy';
 import LayoutManager from './LayoutManager';
@@ -28,10 +28,17 @@ export interface DataSection<ItemT> {
   stickyHeaderIndices?: number[];
   numOfColumns?: number;
   itemSize?: number; // vertical list -> height, horizontal list -> width
+  gap?: number;
 }
 
 export type WithDummyCount<T> = T & {
   dummyCount?: number;
+};
+
+export type WithGapInfo<T> = T & {
+  numOfRows?: number;
+  gap1_3?: number;
+  gap2_3?: number;
 };
 
 export type Section = ElementSection | DataSection<any>;
@@ -84,6 +91,10 @@ export function FlashSectionListBuilder() {
         },
         ref: any
       ) {
+        const [containerWidth, setContainerWidth] = useState<
+          number | undefined
+        >(undefined);
+
         let { sections, ...props } = propsOrigin;
         props = omit(propsOrigin, omitProps, false);
 
@@ -100,7 +111,8 @@ export function FlashSectionListBuilder() {
           stickyHeaderIndices,
           numOfColumns,
         } = useMemo(() => {
-          const dataSections: WithDummyCount<DataSection<any>>[] = [];
+          const dataSections: WithGapInfo<WithDummyCount<DataSection<any>>>[] =
+            [];
 
           const numOfColumnArray: number[] = [];
 
@@ -111,11 +123,18 @@ export function FlashSectionListBuilder() {
 
           const data = sections.reduce<Array<any>>(
             (acc, cur: DataSection<any> | ElementSection) => {
-              const section: WithDummyCount<DataSection<any>> =
+              const section: WithGapInfo<WithDummyCount<DataSection<any>>> =
                 isElementSection(cur)
                   ? convertDataSectionFrom(cur as ElementSection)
                   : (cur as DataSection<any>);
 
+              if (section.gap) {
+                section.numOfRows = Math.floor(
+                  (section.data.length - 1) / (section.numOfColumns ?? 1)
+                );
+                section.gap1_3 = section.gap / 3;
+                section.gap2_3 = (section.gap * 2) / 3;
+              }
               dataSections.push(section);
 
               const {
@@ -222,6 +241,14 @@ export function FlashSectionListBuilder() {
           <FlashListComponent
             {...props}
             ref={ref}
+            onLayout={
+              !props.horizontal
+                ? (e) => {
+                    setContainerWidth(e.nativeEvent?.layout?.width);
+                    props.onLayout?.(e);
+                  }
+                : props.onLayout
+            }
             data={data}
             stickyHeaderIndices={stickyHeaderIndices}
             numColumns={numOfColumns}
@@ -266,6 +293,39 @@ export function FlashSectionListBuilder() {
                 return section.footer!.element;
               }
 
+              let style: StyleProp<ViewStyle> = undefined;
+
+              if (section.gap && containerWidth) {
+                const sectionNumOfColumns = section.numOfColumns ?? 1;
+
+                style = { flex: 1 };
+
+                const isFirstInRow = localIndex % sectionNumOfColumns === 0;
+                const isLastInRow =
+                  localIndex % sectionNumOfColumns === sectionNumOfColumns - 1;
+                if (isFirstInRow) {
+                  style.marginLeft = section.gap;
+                  style.marginRight = section.gap1_3;
+                } else if (isLastInRow) {
+                  style.marginLeft = section.gap1_3;
+                  style.marginRight = section.gap;
+                } else {
+                  style.marginLeft = section.gap2_3;
+                  style.marginRight = section.gap2_3;
+                }
+
+                if (section.numOfRows && section.numOfRows > 0) {
+                  const isLastRow =
+                    Math.floor(localIndex / sectionNumOfColumns) ===
+                    section.numOfRows;
+                  if (!isLastRow) {
+                    style.marginBottom = section.gap;
+                  }
+                }
+              } else if (numOfColumns > 1) {
+                style = { flex: 1 };
+              }
+
               return (
                 <View
                   onLayout={(e) => {
@@ -275,6 +335,7 @@ export function FlashSectionListBuilder() {
                     if (!width && !height) return;
                     Dummy.emitSize(sectionIndex, localIndex, { width, height });
                   }}
+                  style={style}
                 >
                   {section.renderItem({
                     index: localIndex,
