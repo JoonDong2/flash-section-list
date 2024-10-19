@@ -58,6 +58,8 @@ const convertDataSectionFrom = (section: ElementSection): DataSection<any> => {
   };
 };
 
+const flex1 = { flex: 1 } as const;
+
 const omitProps = [
   'data',
   'renderItem',
@@ -279,7 +281,7 @@ export function FlashSectionListBuilder() {
 
               const isHeader = section.header && index === sectionStartIndex;
               if (isHeader) {
-                return section.header!.element;
+                return <View style={flex1}>{section.header!.element}</View>;
               }
 
               const isFooter =
@@ -290,10 +292,10 @@ export function FlashSectionListBuilder() {
                     headerOffset +
                     (section.dummyCount ?? 0);
               if (isFooter) {
-                return section.footer!.element;
+                return <View style={flex1}>{section.footer!.element}</View>;
               }
 
-              let style: StyleProp<ViewStyle> = undefined;
+              let style: StyleProp<ViewStyle>;
 
               if (section.gap && containerWidth) {
                 const sectionNumOfColumns = section.numOfColumns ?? 1;
