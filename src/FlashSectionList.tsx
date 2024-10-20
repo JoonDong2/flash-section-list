@@ -35,12 +35,6 @@ export type WithDummyCount<T> = T & {
   dummyCount?: number;
 };
 
-export type WithGapInfo<T> = T & {
-  numOfRows?: number;
-  gap1_3?: number;
-  gap2_3?: number;
-};
-
 export type Section = ElementSection | DataSection<any>;
 
 const isElementSection = (section: any) => {
@@ -113,8 +107,7 @@ export function FlashSectionListBuilder() {
           stickyHeaderIndices,
           numOfColumns,
         } = useMemo(() => {
-          const dataSections: WithGapInfo<WithDummyCount<DataSection<any>>>[] =
-            [];
+          const dataSections: WithDummyCount<DataSection<any>>[] = [];
 
           const numOfColumnArray: number[] = [];
 
@@ -125,18 +118,11 @@ export function FlashSectionListBuilder() {
 
           const data = sections.reduce<Array<any>>(
             (acc, cur: DataSection<any> | ElementSection) => {
-              const section: WithGapInfo<WithDummyCount<DataSection<any>>> =
+              const section: WithDummyCount<DataSection<any>> =
                 isElementSection(cur)
                   ? convertDataSectionFrom(cur as ElementSection)
                   : (cur as DataSection<any>);
 
-              if (section.gap) {
-                section.numOfRows = Math.floor(
-                  (section.data.length - 1) / (section.numOfColumns ?? 1)
-                );
-                section.gap1_3 = section.gap / 3;
-                section.gap2_3 = (section.gap * 2) / 3;
-              }
               dataSections.push(section);
 
               const {
@@ -300,32 +286,30 @@ export function FlashSectionListBuilder() {
               if (section.gap && containerWidth) {
                 const sectionNumOfColumns = section.numOfColumns ?? 1;
 
-                style = { flex: 1 };
+                const numOfRows = Math.floor(
+                  (section.data.length - 1) / (section.numOfColumns ?? 1)
+                );
 
-                const isFirstInRow = localIndex % sectionNumOfColumns === 0;
-                const isLastInRow =
-                  localIndex % sectionNumOfColumns === sectionNumOfColumns - 1;
-                if (isFirstInRow) {
-                  style.marginLeft = section.gap;
-                  style.marginRight = section.gap1_3;
-                } else if (isLastInRow) {
-                  style.marginLeft = section.gap1_3;
-                  style.marginRight = section.gap;
-                } else {
-                  style.marginLeft = section.gap2_3;
-                  style.marginRight = section.gap2_3;
-                }
+                const itemWidth =
+                  (containerWidth - (sectionNumOfColumns + 1) * section.gap) /
+                  sectionNumOfColumns;
 
-                if (section.numOfRows && section.numOfRows > 0) {
+                style = { width: itemWidth };
+
+                const indexInRow = localIndex % sectionNumOfColumns;
+                style.marginLeft =
+                  section.gap -
+                  (section.gap * indexInRow) / sectionNumOfColumns;
+
+                if (numOfRows > 0) {
                   const isLastRow =
-                    Math.floor(localIndex / sectionNumOfColumns) ===
-                    section.numOfRows;
+                    Math.floor(localIndex / sectionNumOfColumns) === numOfRows;
                   if (!isLastRow) {
                     style.marginBottom = section.gap;
                   }
                 }
               } else if (numOfColumns > 1) {
-                style = { flex: 1 };
+                style = flex1;
               }
 
               return (
