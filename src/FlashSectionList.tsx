@@ -4,7 +4,7 @@ import {
   type ListRenderItem,
   type ListRenderItemInfo,
 } from '@shopify/flash-list';
-import { useMemo, useState } from 'react';
+import { useImperativeHandle, useMemo, useRef, useState } from 'react';
 import { lcm, omit } from './utils';
 import React from 'react';
 import { View, type StyleProp, type ViewStyle } from 'react-native';
@@ -36,6 +36,34 @@ export type WithDummyCount<T> = T & {
 };
 
 export type Section = ElementSection | DataSection<any>;
+
+export interface FlashSectionListhandle {
+  prepareForLayoutAnimationRender: () => void;
+  recordInteraction: () => void;
+  recomputeViewableItems: () => void;
+  scrollToEnd?: (params?: { animated?: boolean | null | undefined }) => void;
+  scrollToIndex: (params: {
+    animated?: boolean | null | undefined;
+    index: number;
+    viewOffset?: number | undefined;
+    viewPosition?: number | undefined;
+  }) => void;
+  scrollToItem: (params: {
+    animated?: boolean | null | undefined;
+    item: any;
+    viewPosition?: number | undefined;
+  }) => void;
+  scrollToOffset: (params: {
+    animated?: boolean | null | undefined;
+    offset: number;
+  }) => void;
+  scrollToSection: (params: {
+    animated?: boolean | null | undefined;
+    sectionIndex: number;
+    viewOffset?: number | undefined;
+    viewPosition?: number | undefined;
+  }) => void;
+}
 
 const isElementSection = (section: any) => {
   return React.isValidElement((section as ElementSection).element);
@@ -87,6 +115,8 @@ export function FlashSectionListBuilder() {
         },
         ref: any
       ) {
+        const flashlist = useRef<any>(null);
+
         const [containerWidth, setContainerWidth] = useState<
           number | undefined
         >(undefined);
@@ -225,10 +255,58 @@ export function FlashSectionListBuilder() {
           return -1;
         };
 
+        useImperativeHandle(ref, () => {
+          return {
+            scrollToSection: (params: {
+              animated?: boolean | null | undefined;
+              sectionIndex: number;
+              viewOffset?: number | undefined;
+              viewPosition?: number | undefined;
+            }) => {
+              if (
+                !Array.isArray(sectionStartIndices) ||
+                sectionStartIndices.length === 0
+              ) {
+                return;
+              }
+
+              const index = sectionStartIndices[params.sectionIndex];
+              if (index === undefined) {
+                return;
+              }
+              flashlist.current?.scrollToIndex?.({
+                ...params,
+                index,
+              });
+            },
+            prepareForLayoutAnimationRender: () => {
+              flashlist.current?.prepareForLayoutAnimationRender?.();
+            },
+            recordInteraction: () => {
+              flashlist.current?.recordInteraction?.();
+            },
+            recomputeViewableItems: () => {
+              flashlist.current?.recomputeViewableItems?.();
+            },
+            scrollToEnd: (...params: any) => {
+              flashlist.current?.scrollToEnd?.(...params);
+            },
+            scrollToIndex: (...parsms: any) => {
+              flashlist.current?.scrollToIndex?.(...parsms);
+            },
+            scrollToItem: (...params: any) => {
+              flashlist.current?.scrollToItem?.(...params);
+            },
+            scrollToOffset: (...params: any) => {
+              flashlist.current?.scrollToOffset?.(...params);
+            },
+          };
+        }, [sectionStartIndices]);
+
         return (
           <FlashListComponent
             {...props}
-            ref={ref}
+            ref={flashlist as any}
             onLayout={
               !props.horizontal
                 ? (e) => {
