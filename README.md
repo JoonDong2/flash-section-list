@@ -68,6 +68,29 @@ By default, the `index` of the Section is used. However, if items in different S
 
 It's recommended to use the same type for items with the same structure to encourage optimal reuse.
 
+### scrollToSection
+
+You can use the methods exposed by `FlashList`, and additionally, the `scrollToSection` method is available.
+
+```js
+import FlashSectionList, { type FlashSectionListhandle } from 'flash-section-list';
+import { useRef, useEffect } from 'react';
+
+export default function App() {
+  const ref = useRef<FlashSectionListhandle>(null);
+
+  useEffect(() => {
+    setTimetout(() => {
+      ref.current?.scrollToSection({ sectionIndex: 1 });
+    }, 1000);
+  }, []);
+
+  return (
+    <FlashSectionList ref={ref} {/* ... */} />
+  );
+}
+```
+
 ## Known Issues
 
 ### Item Type
