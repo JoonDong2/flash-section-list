@@ -73,11 +73,11 @@ It's recommended to use the same type for items with the same structure to encou
 You can use the methods exposed by `FlashList`, and additionally, the `scrollToSection` method is available.
 
 ```js
-import FlashSectionList, { type FlashSectionListhandle } from 'flash-section-list';
+import FlashSectionList, { type FlashSectionListHandle } from 'flash-section-list';
 import { useRef, useEffect } from 'react';
 
 export default function App() {
-  const ref = useRef<FlashSectionListhandle>(null);
+  const ref = useRef<FlashSectionListHandle>(null);
 
   useEffect(() => {
     setTimetout(() => {

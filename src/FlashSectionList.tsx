@@ -37,7 +37,7 @@ export type WithDummyCount<T> = T & {
 
 export type Section = ElementSection | DataSection<any>;
 
-export interface FlashSectionListhandle {
+export interface FlashSectionListHandle {
   prepareForLayoutAnimationRender: () => void;
   recordInteraction: () => void;
   recomputeViewableItems: () => void;
