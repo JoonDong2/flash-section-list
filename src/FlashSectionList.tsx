@@ -19,6 +19,16 @@ export interface ElementSection {
   size?: number;
 }
 
+const methodNames = [
+  'prepareForLayoutAnimationRender',
+  'recordInteraction',
+  'recomputeViewableItems',
+  'scrollToEnd',
+  'scrollToIndex',
+  'scrollToItem',
+  'scrollToOffset',
+] as const;
+
 export interface DataSection<ItemT> {
   data: ItemT[];
   renderItem: ListRenderItem<ItemT>;
@@ -256,8 +266,16 @@ export function FlashSectionListBuilder() {
         };
 
         useImperativeHandle(ref, () => {
+          const mothods = methodNames.reduce((acc, cur) => {
+            acc[cur] = (...props: any) => {
+              flashlist.current?.[cur](...props);
+            };
+            return acc;
+          }, {} as any);
+
           return {
             ...flashlist.current,
+            ...mothods,
             scrollToSection: (params: {
               animated?: boolean | null | undefined;
               sectionIndex: number;
@@ -279,27 +297,6 @@ export function FlashSectionListBuilder() {
                 ...params,
                 index,
               });
-            },
-            prepareForLayoutAnimationRender: () => {
-              flashlist.current?.prepareForLayoutAnimationRender?.();
-            },
-            recordInteraction: () => {
-              flashlist.current?.recordInteraction?.();
-            },
-            recomputeViewableItems: () => {
-              flashlist.current?.recomputeViewableItems?.();
-            },
-            scrollToEnd: (...params: any) => {
-              flashlist.current?.scrollToEnd?.(...params);
-            },
-            scrollToIndex: (...parsms: any) => {
-              flashlist.current?.scrollToIndex?.(...parsms);
-            },
-            scrollToItem: (...params: any) => {
-              flashlist.current?.scrollToItem?.(...params);
-            },
-            scrollToOffset: (...params: any) => {
-              flashlist.current?.scrollToOffset?.(...params);
             },
           };
         }, [sectionStartIndices]);
