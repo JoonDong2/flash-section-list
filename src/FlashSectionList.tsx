@@ -257,6 +257,7 @@ export function FlashSectionListBuilder() {
 
         useImperativeHandle(ref, () => {
           return {
+            ...flashlist.current,
             scrollToSection: (params: {
               animated?: boolean | null | undefined;
               sectionIndex: number;
