@@ -158,7 +158,7 @@ export function FlashSectionListBuilder() {
         const {
           dataSections,
           sectionStartIndices,
-          data,
+          serializedData,
           stickyHeaderIndices,
           numOfColumns,
         } = useMemo(() => {
@@ -171,7 +171,7 @@ export function FlashSectionListBuilder() {
 
           const sectionStartIndices: number[] = [];
 
-          const data = sections.reduce<Array<any>>(
+          const serializedData = sections.reduce<Array<any>>(
             (acc, cur: DataSection<any> | ElementSection) => {
               const section: WithDummyCount<DataSection<any>> =
                 isElementSection(cur)
@@ -241,7 +241,7 @@ export function FlashSectionListBuilder() {
           return {
             dataSections,
             sectionStartIndices,
-            data,
+            serializedData,
             stickyHeaderIndices,
             numOfColumns: lcm(numOfColumnArray),
           };
@@ -328,7 +328,7 @@ export function FlashSectionListBuilder() {
                   }
                 : props.onLayout
             }
-            data={data}
+            data={serializedData}
             stickyHeaderIndices={stickyHeaderIndices}
             numColumns={numOfColumns}
             renderItem={({ index, item, ...etc }: ListRenderItemInfo<any>) => {
