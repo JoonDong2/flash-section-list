@@ -5,7 +5,7 @@ import {
   type ListRenderItemInfo,
 } from '@shopify/flash-list';
 import { useImperativeHandle, useMemo, useRef, useState } from 'react';
-import { lcm, omit } from './utils';
+import { findFirstProp, lcm, omit } from './utils';
 import React from 'react';
 import { View, type StyleProp, type ViewStyle } from 'react-native';
 import { useDummy } from './useDummy';
@@ -38,7 +38,12 @@ export interface DataSection<ItemT> {
   stickyHeaderIndices?: number[];
   numOfColumns?: number;
   itemSize?: number; // vertical list -> height, horizontal list -> width
-  gap?: number;
+  gap?:
+    | number
+    | {
+        size: number;
+        includeEdge?: boolean;
+      };
 }
 
 export type WithDummyCount<T> = T & {
@@ -133,6 +138,16 @@ export function FlashSectionListBuilder() {
 
         let { sections, ...props } = propsOrigin;
         props = omit(propsOrigin, omitProps, false);
+
+        const contentContainerPaddingHorizontal = useMemo(() => {
+          const paddingHorizontal = findFirstProp(props.contentContainerStyle, [
+            'paddingHorizontal',
+            'paddingLeft',
+          ]);
+          return typeof paddingHorizontal === 'number'
+            ? paddingHorizontal * 2
+            : 0;
+        }, [props.contentContainerStyle]);
 
         const Dummy = useDummy({
           horizontal: props.horizontal,
@@ -366,22 +381,38 @@ export function FlashSectionListBuilder() {
                   (section.data.length - 1) / (section.numOfColumns ?? 1)
                 );
 
+                const includeEdge =
+                  !(typeof section.gap === 'number') &&
+                  !!section.gap.includeEdge;
+
+                const gap =
+                  typeof section.gap === 'number'
+                    ? section.gap
+                    : section.gap.size;
+
+                const numOfGaps = includeEdge
+                  ? sectionNumOfColumns + 1
+                  : sectionNumOfColumns - 1;
+
                 const itemWidth =
-                  (containerWidth - (sectionNumOfColumns + 1) * section.gap) /
+                  (containerWidth -
+                    contentContainerPaddingHorizontal -
+                    numOfGaps * gap) /
                   sectionNumOfColumns;
 
                 style = { width: itemWidth };
 
                 const indexInRow = localIndex % sectionNumOfColumns;
-                style.marginLeft =
-                  section.gap -
-                  (section.gap * indexInRow) / sectionNumOfColumns;
+
+                style.marginLeft = includeEdge
+                  ? gap - (gap * indexInRow) / sectionNumOfColumns
+                  : (gap * indexInRow) / sectionNumOfColumns;
 
                 if (numOfRows > 0) {
                   const isLastRow =
                     Math.floor(localIndex / sectionNumOfColumns) === numOfRows;
                   if (!isLastRow) {
-                    style.marginBottom = section.gap;
+                    style.marginBottom = gap;
                   }
                 }
               } else if (numOfColumns > 1) {

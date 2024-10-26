@@ -29,3 +29,12 @@ const _lcm = (a: number, b: number) => {
 export const lcm = (numbers: number[]) => {
   return numbers.reduce((acc, cur) => _lcm(acc, cur), 1);
 };
+
+export const findFirstProp = (obj: any, props: string[]) => {
+  if (!obj || typeof obj !== 'object') return;
+  for (let i = 0; i < props.length; i++) {
+    const prop = props[i]!;
+    const value = obj[prop];
+    if (value !== undefined) return value;
+  }
+};
