@@ -5,7 +5,7 @@ import {
   type ListRenderItemInfo,
 } from '@shopify/flash-list';
 import { useImperativeHandle, useMemo, useRef, useState } from 'react';
-import { findFirstProp, lcm, omit } from './utils';
+import { binarySearchClosestIndex, findFirstProp, lcm, omit } from './utils';
 import React from 'react';
 import { View, type StyleProp, type ViewStyle } from 'react-native';
 import { useDummy } from './useDummy';
@@ -247,39 +247,6 @@ export function FlashSectionListBuilder() {
           };
         }, [Dummy, sections]);
 
-        // binary search
-        const getSectionIndexOf = (index: number) => {
-          if (!sectionStartIndices?.length) return -1;
-
-          let low = 0;
-          let high = sectionStartIndices.length - 1;
-
-          while (low <= high) {
-            const mid = Math.floor((low + high) / 2);
-            const midValue = sectionStartIndices[mid]!;
-            if (midValue === index) {
-              return mid;
-            }
-            if (low === mid || high === mid) {
-              // return low or high
-              if (sectionStartIndices[high]! <= index) {
-                return high;
-              }
-              return low;
-            }
-
-            // left
-            if (midValue > index) {
-              high = mid;
-            }
-            // right
-            else if (midValue < index) {
-              low = mid;
-            }
-          }
-          return -1;
-        };
-
         useImperativeHandle(ref, () => {
           const mothods = methodNames.reduce((acc, cur) => {
             acc[cur] = (...props: any) => {
@@ -332,7 +299,10 @@ export function FlashSectionListBuilder() {
             stickyHeaderIndices={stickyHeaderIndices}
             numColumns={numOfColumns}
             renderItem={({ index, item, ...etc }: ListRenderItemInfo<any>) => {
-              const sectionIndex = getSectionIndexOf(index);
+              const sectionIndex = binarySearchClosestIndex(
+                sectionStartIndices,
+                index
+              );
               const section = dataSections[sectionIndex];
               const sectionStartIndex = sectionStartIndices[sectionIndex];
               if (!section || sectionStartIndex === undefined) {
@@ -439,7 +409,10 @@ export function FlashSectionListBuilder() {
               );
             }}
             getItemType={(item, index) => {
-              const sectionIndex = getSectionIndexOf(index);
+              const sectionIndex = binarySearchClosestIndex(
+                sectionStartIndices,
+                index
+              );
               const section = dataSections[sectionIndex];
               const sectionStartIndex = sectionStartIndices[sectionIndex];
               if (!section || sectionStartIndex === undefined) {
@@ -470,7 +443,10 @@ export function FlashSectionListBuilder() {
               return section.type ?? sectionIndex;
             }}
             overrideItemLayout={(layout, _, index) => {
-              const sectionIndex = getSectionIndexOf(index);
+              const sectionIndex = binarySearchClosestIndex(
+                sectionStartIndices,
+                index
+              );
               const section = dataSections[sectionIndex];
               const sectionStartIndex = sectionStartIndices[sectionIndex];
               if (!section || sectionStartIndex === undefined) {

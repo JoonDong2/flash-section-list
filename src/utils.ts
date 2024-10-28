@@ -38,3 +38,38 @@ export const findFirstProp = (obj: any, props: string[]) => {
     if (value !== undefined) return value;
   }
 };
+
+export const binarySearchClosestIndex = (
+  arr: number[] | undefined,
+  value: number
+) => {
+  if (!arr?.length) return -1;
+
+  let low = 0;
+  let high = arr.length - 1;
+
+  while (low <= high) {
+    const mid = Math.floor((low + high) / 2);
+    const midValue = arr[mid]!;
+    if (midValue === value) {
+      return mid;
+    }
+    if (low === mid || high === mid) {
+      // return low or high
+      if (arr[high]! <= value) {
+        return high;
+      }
+      return low;
+    }
+
+    // left
+    if (midValue > value) {
+      high = mid;
+    }
+    // right
+    else if (midValue < value) {
+      low = mid;
+    }
+  }
+  return -1;
+};
