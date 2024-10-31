@@ -23,7 +23,12 @@ interface DataSection<ItemT> {
   stickyHeaderIndices?: number[];
   numOfColumns?: number;
   itemSize?: number;
-  gap?: number;
+  gap?:
+    | number
+    | {
+        size: number;
+        includeEdge?: boolean;
+      };
 }
 ```
 
